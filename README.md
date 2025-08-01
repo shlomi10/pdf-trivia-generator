@@ -1,7 +1,9 @@
 # 🧠 AI-Powered PDF Trivia Generator
 
-[![Build Status](https://img.shields.io/github/actions/workflow/status/shlomi10/pdf-trivia-generator/docker-hub-push.yml?branch=main&style=for-the-badge&logo=github&logoColor=white&label=BUILD)](https://github.com/shlomi10/pdf-trivia-generator/actions)
+[![Build Status](https://img.shields.io/github/actions/workflow/status/shlomi10/pdf-trivia-generator/docker-hub-push.yml?style=for-the-badge&logo=github&logoColor=white&label=BUILD)](https://github.com/shlomi10/pdf-trivia-generator/actions)
 [![Docker Hub](https://img.shields.io/docker/pulls/shlomi10/pdf-trivia-app?style=for-the-badge&logo=docker&logoColor=white&label=DOCKER%20PULLS&color=2496ED)](https://hub.docker.com/repository/docker/shlomi10/pdf-trivia-app/general)
+[![License](https://img.shields.io/github/license/shlomi10/pdf-trivia-generator?style=for-the-badge&logo=opensourceinitiative&logoColor=white&label=LICENSE&color=green)](https://opensource.org/licenses/MIT)
+
 [![Python](https://img.shields.io/badge/Python-3.13-3776AB?style=for-the-badge&logo=python&logoColor=white)](https://www.python.org/downloads/)
 [![FastAPI](https://img.shields.io/badge/FastAPI-0.104.1-009688?style=for-the-badge&logo=fastapi&logoColor=white)](https://fastapi.tiangolo.com)
 [![OpenAI](https://img.shields.io/badge/OpenAI-GPT--4o-412991?style=for-the-badge&logo=openai&logoColor=white)](https://openai.com)
@@ -159,26 +161,26 @@ docker-compose down
 
 ```bash
 # Build the image
-docker build -t shlomi10/pdf-trivia-generator .
+docker build -t shlomi10/pdf-trivia-app:1.0 .
 
 # Run with environment file
-docker run --env-file .env -p 8000:8000 shlomi10/pdf-trivia-generator
+docker run --env-file .env -p 8000:8000 shlomi10/pdf-trivia-app:1.0
 
 # Or run with environment variables
 docker run -e OPENAI_API_KEY=your_key \
            -e AWS_ACCESS_KEY_ID=your_key \
            -e AWS_SECRET_ACCESS_KEY=your_secret \
-           -p 8000:8000 shlomi10/pdf-trivia-generator
+           -p 8000:8000 shlomi10/pdf-trivia-app:1.0
 ```
 
 ### Option 3: Pull from Docker Hub
 
 ```bash
 # Pull the latest image
-docker pull shlomi10/pdf-trivia-generator:latest
+docker pull shlomi10/pdf-trivia-app:latest
 
 # Run the container
-docker run --env-file .env -p 8000:8000 shlomi10/pdf-trivia-generator:latest
+docker run --env-file .env -p 8000:8000 shlomi10/pdf-trivia-app:latest
 ```
 
 ---
