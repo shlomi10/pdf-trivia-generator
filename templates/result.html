@@ -1,0 +1,236 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Trivia Result</title>
+  <link rel="stylesheet" href="/static/style.css">
+  <style>
+
+    button {
+  background-color: #4ade80;
+  border: none;
+  padding: 0.75rem 1.5rem;
+  font-size: 1.1rem;
+  border-radius: 6px;
+  cursor: pointer;
+  margin-top: 1rem;
+  font-family: 'Michroma', sans-serif;
+  font-weight: bold;
+  color: black;
+  transition: background-color 0.2s ease, transform 0.2s ease;
+}
+
+button:hover {
+  background-color: #34d399;
+  transform: scale(1.03);
+}
+
+
+    body {
+      font-family: 'Michroma', sans-serif;
+      background: url('/static/bg.jpg') no-repeat center center fixed;
+      background-size: cover;
+      color: white;
+      text-align: center;
+      padding: 2rem;
+      animation: fadeIn 1s ease-in;
+    }
+
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(20px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    nav {
+      background-color: rgba(0, 0, 0, 0.7);
+      padding: 1rem 2rem;
+      display: flex;
+      justify-content: center;
+      flex-wrap: wrap;
+      gap: 1rem;
+      max-width: 800px;
+      margin: 0 auto 2rem auto;
+      border-radius: 8px;
+    }
+
+    nav a, nav span {
+      color: white;
+      font-weight: bold;
+      text-decoration: none;
+      font-size: 1rem;
+      text-shadow:
+        -1px -1px 0 #000,
+         1px -1px 0 #000,
+        -1px  1px 0 #000,
+         1px  1px 0 #000;
+    }
+
+    nav a:hover {
+      color: #4ade80;
+    }
+
+    #game {
+      max-width: 700px;
+      margin: 0 auto;
+      background-color: rgba(0,0,0,0.7);
+      padding: 2rem;
+      border-radius: 12px;
+    }
+
+    .score {
+      font-size: 1.25rem;
+      margin: 1rem 0;
+    }
+
+    .options button {
+      display: block;
+      width: 100%;
+      margin: 0.5rem 0;
+      font-family: inherit;
+    }
+
+    button {
+      background-color: #4ade80;
+      border: none;
+      padding: 0.75rem 1.5rem;
+      font-size: 1rem;
+      border-radius: 6px;
+      cursor: pointer;
+      margin-top: 1rem;
+    }
+
+    button:hover {
+      background-color: #34d399;
+    }
+
+    select {
+      font-size: 1rem;
+      padding: 0.5rem 1rem;
+      margin-bottom: 1rem;
+    }
+  </style>
+</head>
+<body>
+
+{% if username %}
+  <h2 class="fade-in">Welcome, {{ username }} 👋</h2>
+{% endif %}
+
+<nav>
+  <a href="/">🏠 Home</a>
+  {% if username %}
+    <span style="margin-inline: 1rem;">👋 Hello {{ username }}</span>
+    <a href="/upload">📤 Upload</a>
+    <a href="/scores">📊 My Scores</a>
+    <a href="/logout">🚪 Logout</a>
+  {% else %}
+    <a href="/login">🔐 Login</a>
+    <a href="/register">📝 Register</a>
+  {% endif %}
+</nav>
+
+<h1>Your Trivia Game 🎯</h1>
+<div id="game">
+  <div id="setup">
+    <p>Select number of questions to play:</p>
+    <select id="question-count">
+      <option value="3">3 Questions</option>
+      <option value="5" selected>5 Questions</option>
+      <option value="10">10 Questions</option>
+    </select>
+    <br/>
+    <button onclick="startGame()">Generate a Trivia Game</button>
+  </div>
+
+  <div id="quiz" style="display: none;">
+    <p id="live-score" class="score">Score: 0</p>
+    <p id="question-text"></p>
+    <div id="options-container" class="options"></div>
+    <p id="feedback"></p>
+  </div>
+</div>
+
+<script>
+  const fullTrivia = {{ trivia | tojson | safe }};
+  const gameId = {{ game_id }};
+  let trivia = [];
+  let current = 0;
+  let score = 0;
+
+  function startGame() {
+    const count = parseInt(document.getElementById("question-count").value);
+    trivia = fullTrivia.slice(0, count);
+    document.getElementById("setup").style.display = "none";
+    document.getElementById("quiz").style.display = "block";
+    showQuestion();
+  }
+
+  function showQuestion() {
+    document.getElementById("feedback").innerText = "";
+    const q = trivia[current];
+    document.getElementById("question-text").innerText = q.question;
+
+    const optionsDiv = document.getElementById("options-container");
+    optionsDiv.innerHTML = "";
+
+    q.options.forEach(opt => {
+      const btn = document.createElement("button");
+      btn.textContent = opt;
+      btn.onclick = () => {
+        const correct = opt === q.answer;
+        if (correct) {
+          document.getElementById("feedback").innerText = "✅ Correct!";
+          score++;
+        } else {
+          document.getElementById("feedback").innerText = "❌ Wrong! Correct answer: " + q.answer;
+        }
+        document.querySelectorAll(".options button").forEach(b => b.disabled = true);
+        updateLiveScore();
+        setTimeout(nextQuestion, 2000);
+      };
+      optionsDiv.appendChild(btn);
+    });
+  }
+
+  function updateLiveScore() {
+    document.getElementById("live-score").innerText = `Score: ${score}`;
+  }
+
+  async function nextQuestion() {
+    current++;
+    if (current < trivia.length) {
+      showQuestion();
+    } else {
+      await saveScore();
+      document.getElementById("game").innerHTML = `
+        <h2>🎉 Game Over!</h2>
+        <p class="score">Your score: ${score} / ${trivia.length}</p>
+        <a href="/upload" style="color: #4ade80;">🔁 Try another PDF</a>
+        <div style="margin-top: 1rem;">
+          <a href="/" style="color: #4ade80; text-decoration: underline;">🏠 Back to Home</a>
+        </div>
+      `;
+    }
+  }
+
+  async function saveScore() {
+    try {
+      const formData = new FormData();
+      formData.append("game_id", gameId);
+      formData.append("score", score);
+
+      const res = await fetch("/save-score", {
+        method: "POST",
+        body: formData,
+        credentials: "include"
+      });
+
+      const data = await res.json();
+      console.log("Saved score:", data.message);
+    } catch (err) {
+      console.error("Failed to save score:", err);
+    }
+  }
+</script>
+
+</body>
+</html>

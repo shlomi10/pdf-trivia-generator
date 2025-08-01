@@ -1,0 +1,127 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8"/>
+    <title>Welcome to the Trivia Game</title>
+    <link rel="icon" href="/static/favicon.ico" type="image/x-icon"/>
+    <link rel="stylesheet" href="/static/style.css"/>
+    <style>
+        body {
+            background: url('/static/bg.jpg') no-repeat center center fixed;
+            background-size: cover;
+            margin: 0;
+            color: white;
+            text-align: center;
+        }
+
+        .text-outline {
+            text-shadow: -1px -1px 0 #000,
+            1px -1px 0 #000,
+            -1px 1px 0 #000,
+            1px 1px 0 #000;
+        }
+
+        .glow {
+            animation: pulseGlow 2.5s ease-in-out infinite;
+        }
+
+        @keyframes pulseGlow {
+            0%, 100% {
+                text-shadow: 0 0 6px #4ade80, 0 0 12px #4ade80;
+            }
+            50% {
+                text-shadow: 0 0 12px #4ade80, 0 0 24px #4ade80;
+            }
+        }
+
+        nav {
+            background-color: rgba(0, 0, 0, 0.7);
+            padding: 1rem 2rem;
+            display: flex;
+            justify-content: center;
+            flex-wrap: wrap;
+            gap: 1rem;
+            max-width: 800px;
+            margin: 0 auto 2rem auto;
+            border-radius: 8px;
+        }
+
+
+        nav a, nav span {
+            color: white;
+            font-weight: bold;
+            text-decoration: none;
+            font-size: 1rem;
+            text-shadow: -1px -1px 0 #000,
+            1px -1px 0 #000,
+            -1px 1px 0 #000,
+            1px 1px 0 #000;
+        }
+
+        nav a:hover {
+            color: #4ade80;
+        }
+
+        .container {
+            margin-top: 15vh;
+        }
+
+        .container a {
+            display: inline-block;
+            margin-top: 1rem;
+            padding: 0.8rem 1.5rem;
+            background-color: #28a745;
+            color: white;
+            text-decoration: none;
+            font-weight: bold;
+            border-radius: 5px;
+        }
+
+        .container a:hover {
+            background-color: #218838;
+        }
+    </style>
+</head>
+<body>
+
+{% if username %}
+<h2 class="fade-in">Welcome, {{ username }} 👋</h2>
+{% endif %}
+
+<nav>
+    <a href="/">🏠 Home</a>
+    {% if username %}
+    <span style="margin-inline: 1rem;">👋 Hello {{ username }}</span>
+    <a href="/upload">📤 Upload</a>
+    <a href="/scores">📊 My Scores</a>
+    <a href="/logout">🚪 Logout</a>
+    {% else %}
+    <a href="/login">🔐 Login</a>
+    <a href="/register">📝 Register</a>
+    {% endif %}
+</nav>
+
+
+<div class="container">
+    <h1 class="text-outline glow" style="font-size: 2.75rem; margin-bottom: 1rem;">
+        Welcome to <br/>
+        <span style="color: #4ade80;">The PDF Trivia Game</span>
+    </h1>
+
+    <p class="text-outline" style="font-size: 1.25rem; max-width: 650px; margin: 0 auto;">
+        Turn your documents into fun<br/>
+        upload a PDF and instantly generate trivia questions powered by GPT!
+    </p>
+
+
+    <p><a href="/upload">Start Now →</a></p>
+</div>
+
+{% if request.query_params.get("logout") %}
+<script>
+    alert("👋 You have been logged out.");
+</script>
+{% endif %}
+
+</body>
+</html>

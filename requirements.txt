@@ -1,0 +1,32 @@
+# ✅ FastAPI Framework
+fastapi
+uvicorn
+
+# 📂 File Uploads & Static Files
+python-multipart
+aiofiles
+
+# 🔐 Authentication & Security
+passlib[bcrypt]
+python-jose[cryptography]
+
+# 🧠 OpenAI API Integration
+openai
+
+# 🧾 PDF Handling
+pymupdf
+
+# 🛠️ Environment Variables
+python-dotenv
+
+# 🎨 HTML Templating
+jinja2
+
+# 🗄️ Database ORM & PostgreSQL
+sqlalchemy
+psycopg2-binary
+
+# ☁️ AWS S3 Integration
+boto3
+
+bcrypt
