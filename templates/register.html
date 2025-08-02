@@ -161,23 +161,35 @@
 
 <div class="page-wrapper">
     <div class="container">
+
+        {% if error %}
+        <div style="color: #f87171; background: rgba(0,0,0,0.4); padding: 0.75rem; margin-bottom: 1rem; border-radius: 6px;">
+            {{ error }}
+        </div>
+        {% endif %}
+
         <form action="/register" method="post">
             <h1>Register</h1>
+
             <div class="input-group">
-                <input type="text" name="username" required placeholder=" "/>
+                <input type="text" name="username" value="{{ username or '' }}" required placeholder=" "/>
                 <label>Username</label>
             </div>
+
             <div class="input-group">
-                <input type="email" name="email" required placeholder=" "/>
+                <input type="email" name="email" value="{{ email or '' }}" required placeholder=" "/>
                 <label>Email</label>
             </div>
+
             <div class="input-group">
                 <input type="password" name="password" required placeholder=" "/>
                 <label>Password</label>
             </div>
+
             <button type="submit">📝 Register</button>
         </form>
     </div>
+
 </div>
 
 </body>

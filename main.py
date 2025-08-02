@@ -61,7 +61,8 @@ async def register(
     new_user = User(username=username, email=email, hashed_password=hashed_password)
     db.add(new_user)
     db.commit()
-    return RedirectResponse(url="/", status_code=302)
+    return RedirectResponse(url="/login", status_code=302)
+
 @app.post("/upload-pdf", response_class=HTMLResponse)
 async def upload_pdf(request: Request, file: UploadFile = File(...), current_user: User = Depends(get_current_user)):
     file_bytes = await file.read()
