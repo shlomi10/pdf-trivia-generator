@@ -1,318 +1,303 @@
-# 🧠 AI-Powered PDF Trivia Generator
+# 🎯 PDF Trivia Generator
 
-[![Build Status](https://img.shields.io/github/actions/workflow/status/shlomi10/pdf-trivia-generator/docker-hub-push.yml?style=for-the-badge&logo=github&logoColor=white&label=BUILD)](https://github.com/shlomi10/pdf-trivia-generator/actions)
-[![Docker Hub](https://img.shields.io/docker/pulls/shlomi10/pdf-trivia-app?style=for-the-badge&logo=docker&logoColor=white&label=DOCKER%20PULLS&color=2496ED)](https://hub.docker.com/repository/docker/shlomi10/pdf-trivia-app/general)
-[![License](https://img.shields.io/github/license/shlomi10/pdf-trivia-generator?style=for-the-badge&logo=opensourceinitiative&logoColor=white&label=LICENSE&color=green)](https://opensource.org/licenses/MIT)
+[![GitHub Workflow Status](https://img.shields.io/github/actions/workflow/status/shlomi10/pdf-trivia-generator/dockerhub-push.yml?style=for-the-badge&logo=github-actions&logoColor=white)](https://github.com/shlomi10/pdf-trivia-generator/actions)
+[![Docker Pulls](https://img.shields.io/docker/pulls/shlomi10/pdf-trivia-app?style=for-the-badge&logo=docker&logoColor=white)](https://hub.docker.com/r/shlomi10/pdf-trivia-app)
+[![Docker Image Size](https://img.shields.io/docker/image-size/shlomi10/pdf-trivia-app/latest?style=for-the-badge&logo=docker&logoColor=white)](https://hub.docker.com/r/shlomi10/pdf-trivia-app)
+[![Python](https://img.shields.io/badge/python-3.13+-blue?style=for-the-badge&logo=python&logoColor=white)](https://www.python.org/)
+[![FastAPI](https://img.shields.io/badge/FastAPI-005571?style=for-the-badge&logo=fastapi)](https://fastapi.tiangolo.com/)
+[![OpenAI](https://img.shields.io/badge/OpenAI-412991?style=for-the-badge&logo=openai&logoColor=white)](https://openai.com/)
+[![PostgreSQL](https://img.shields.io/badge/PostgreSQL-316192?style=for-the-badge&logo=postgresql&logoColor=white)](https://www.postgresql.org/)
+[![AWS S3](https://img.shields.io/badge/AWS%20S3-FF9900?style=for-the-badge&logo=amazon-s3&logoColor=white)](https://aws.amazon.com/s3/)
+[![Docker](https://img.shields.io/badge/docker-%230db7ed.svg?style=for-the-badge&logo=docker&logoColor=white)](https://www.docker.com/)
 
-[![Python](https://img.shields.io/badge/Python-3.13-3776AB?style=for-the-badge&logo=python&logoColor=white)](https://www.python.org/downloads/)
-[![FastAPI](https://img.shields.io/badge/FastAPI-0.104.1-009688?style=for-the-badge&logo=fastapi&logoColor=white)](https://fastapi.tiangolo.com)
-[![OpenAI](https://img.shields.io/badge/OpenAI-GPT--4o-412991?style=for-the-badge&logo=openai&logoColor=white)](https://openai.com)
-[![AWS S3](https://img.shields.io/badge/AWS-S3-FF9900?style=for-the-badge&logo=amazons3&logoColor=white)](https://aws.amazon.com/s3/)
-[![Docker](https://img.shields.io/badge/Docker-Compose-2496ED?style=for-the-badge&logo=docker&logoColor=white)](https://docs.docker.com/compose/)
+> 🚀 **Transform any PDF into an interactive trivia game powered by GPT-4!**
 
-Generate fun trivia quizzes from any uploaded PDF using AI!  
-This project uses FastAPI, OpenAI, JWT authentication, AWS S3 storage, and a clean UI.  
-Built with ❤️ by [Shlomi Gross](https://github.com/shlomi10).
+A modern web application that extracts content from PDF documents and automatically generates engaging trivia questions using OpenAI's GPT-4. Perfect for educators, students, and anyone looking to gamify their learning experience.
 
----
+![PDF Trivia Demo](https://img.shields.io/badge/Live%20Demo-Coming%20Soon-green?style=for-the-badge)
 
-## 🚀 Features
+## ✨ Features
 
-- 📄 Upload PDFs and generate AI-based trivia
-- ☁️ **AWS S3 integration** for secure PDF storage
-- ✅ JWT Authentication (Register, Login)
-- 🎯 Multiple-choice questions with answers
-- 🧑‍💻 User-based score saving and history
-- 📊 Scoreboard per user
-- 🎛️ Select number of questions to generate
-- 💻 Modern frontend with HTML & CSS
-- 🐳 Docker & Docker Compose support
-- 🚀 GitHub Actions CI/CD pipeline
-- 📦 Automated Docker Hub deployment
+### 🎮 **Interactive Gaming Experience**
+- **Smart Question Generation**: AI-powered trivia creation from any PDF content
+- **Multiple Difficulty Levels**: Choose between 3, 5, or 10 questions per game
+- **Real-time Scoring**: Live score tracking with instant feedback
+- **Responsive Design**: Beautiful UI that works on desktop and mobile
 
----
+### 🔐 **User Management**
+- **Secure Authentication**: JWT-based login system with bcrypt password hashing
+- **Personal Dashboard**: Track your trivia history and scores
+- **Session Management**: Persistent login with secure cookie handling
 
-## 🗂️ Project Structure
+### ☁️ **Cloud-Native Architecture**
+- **AWS S3 Integration**: Secure file storage with pre-signed URLs
+- **PostgreSQL Database**: Robust data persistence for users and games
+- **Docker Containerization**: Easy deployment and scaling
+- **GitHub Actions CI/CD**: Automated builds and deployments
 
-```
-├── main.py                     # FastAPI app entry point
-├── db/                         # Database
-│   ├── db.py                   # Database session and setup
-│   └── models.py               # SQLAlchemy ORM models
-├── games/                      # Games logic
-│   └── games.py                # Game-related CRUD logic
-├── services/                   # Services
-│   ├── aws_file_utilities.py   # S3 upload/download logic
-│   └── trivia_generator.py     # Extract PDF content & send to GPT
-├── auth/                       # Authentication
-│   └── auth.py                 # Auth routes & JWT handling
-├── templates/                  # HTML templates (Jinja2)
-│   ├── index.html              # Main page
-│   ├── login.html              # User login
-│   ├── register.html           # User registration
-│   ├── scores.html             # Score history
-│   ├── upload.html             # PDF upload interface
-│   └── result.html             # Quiz results
-├── static/                     # Static assets
-│   ├── bg.jpg                  # Background wallpaper
-│   ├── favicon.ico             # Site favicon
-│   └── style.css               # Main stylesheet
-├── .env                        # Environment variables (secrets)
-├── Dockerfile                  # Docker container configuration
-├── docker-compose.yml          # Docker Compose setup
-├── requirements.txt            # Python dependencies
-├── README.md                   # Project documentation
-└── .github/                    # GitHub Actions
-    └── workflows/
-        └── docker-hub-push.yml # CI/CD pipeline for Docker Hub
-```
+## 🏗️ Tech Stack
 
----
+### **Backend**
+- **[FastAPI](https://fastapi.tiangolo.com/)** - Modern, fast web framework for building APIs
+- **[Python 3.13+](https://www.python.org/)** - Latest Python features and performance
+- **[SQLAlchemy](https://www.sqlalchemy.org/)** - Powerful SQL toolkit and ORM
+- **[PostgreSQL](https://www.postgresql.org/)** - Advanced open source database
 
-## ⚙️ Tech Stack
+### **AI & Document Processing**
+- **[OpenAI GPT-4](https://openai.com/)** - State-of-the-art language model for question generation
+- **[PyMuPDF](https://pymupdf.readthedocs.io/)** - High-performance PDF text extraction
 
-- 🐍 **Backend:** Python 3.13 + FastAPI + Jinja2
-- 🤖 **AI:** OpenAI GPT-4o for trivia generation
-- 🛢️ **Database:** SQLAlchemy + SQLite (PostgreSQL ready)
-- ☁️ **Storage:** AWS S3 for PDF file storage
-- 🔐 **Auth:** Python-Jose + Passlib (JWT Authentication)
-- 📄 **PDF Processing:** PyMuPDF (PDF → text extraction)
-- 🐳 **DevOps:** Docker + Docker Compose + GitHub Actions
-- 📦 **Deployment:** Automated Docker Hub publishing
+### **Cloud Services**
+- **[AWS S3](https://aws.amazon.com/s3/)** - Scalable object storage for uploaded files
+- **[Boto3](https://boto3.amazonaws.com/v1/documentation/api/latest/index.html)** - AWS SDK for Python
 
----
+### **Security & Authentication**
+- **[Passlib](https://passlib.readthedocs.io/)** - Password hashing with bcrypt
+- **[Python-JOSE](https://python-jose.readthedocs.io/)** - JWT token handling
+- **[FastAPI Security](https://fastapi.tiangolo.com/tutorial/security/)** - OAuth2 with JWT tokens
 
-## ✅ Getting Started
+### **Frontend**
+- **HTML5 & CSS3** - Modern web standards
+- **JavaScript ES6+** - Interactive UI components
+- **Jinja2 Templates** - Server-side rendering
+- **Responsive Design** - Mobile-first approach
 
-### 1. Clone the repository
+### **DevOps & Deployment**
+- **[Docker](https://www.docker.com/)** - Containerization for consistent deployments
+- **[Docker Compose](https://docs.docker.com/compose/)** - Multi-container orchestration
+- **[GitHub Actions](https://github.com/features/actions)** - CI/CD pipeline automation
 
+## 🚀 Quick Start
+
+### Prerequisites
+- Docker and Docker Compose
+- OpenAI API key
+- AWS credentials for S3
+- PostgreSQL database
+
+### 1. Clone the Repository
 ```bash
 git clone https://github.com/shlomi10/pdf-trivia-generator.git
 cd pdf-trivia-generator
 ```
 
-### 2. Create virtual environment
-
-```bash
-python -m venv venv
-
-# Windows
-venv\Scripts\activate
-
-# macOS/Linux
-source venv/bin/activate
-```
-
-### 3. Install dependencies
-
-```bash
-pip install -r requirements.txt
-```
-
-### 4. Configure environment variables
-
-Create `.env` file in the project root:
-
+### 2. Environment Setup
+Create a `.env` file with your credentials:
 ```env
-# OpenAI Configuration
 OPENAI_API_KEY=your_openai_api_key_here
-
-# AWS S3 Configuration
-AWS_ACCESS_KEY_ID=your_aws_access_key_id
-AWS_SECRET_ACCESS_KEY=your_aws_secret_access_key
-AWS_REGION=us-east-1
-S3_BUCKET_NAME=your-pdf-storage-bucket
-
-# JWT Configuration (optional - will use defaults)
-SECRET_KEY=your_jwt_secret_key
-ALGORITHM=HS256
-ACCESS_TOKEN_EXPIRE_MINUTES=30
-
-# Database (optional - defaults to SQLite)
-DATABASE_URL=sqlite:///./trivia_game.db
+AWS_ACCESS_KEY_ID=your_aws_access_key
+AWS_SECRET_ACCESS_KEY=your_aws_secret_key
 ```
 
-### 5. Run the application
-
+### 3. Docker Deployment (Recommended)
 ```bash
-uvicorn main:app --reload
-```
-
-Visit: [http://localhost:8000](http://localhost:8000)
-
----
-
-## 🐳 Docker Usage
-
-### Option 1: Docker Compose (Recommended)
-
-```bash
-# Start the application
-docker-compose up -d
-
-# View logs
-docker-compose logs -f
-
-# Stop the application
-docker-compose down
-```
-
-### Option 2: Docker Build & Run
-
-```bash
-# Build the image
-docker build -t shlomi10/pdf-trivia-app:1.0 .
-
-# Run with environment file
-docker run --env-file .env -p 8000:8000 shlomi10/pdf-trivia-app:1.0
-
-# Or run with environment variables
-docker run -e OPENAI_API_KEY=your_key \
-           -e AWS_ACCESS_KEY_ID=your_key \
-           -e AWS_SECRET_ACCESS_KEY=your_secret \
-           -p 8000:8000 shlomi10/pdf-trivia-app:1.0
-```
-
-### Option 3: Pull from Docker Hub
-
-```bash
-# Pull the latest image
+# Pull the latest image from Docker Hub
 docker pull shlomi10/pdf-trivia-app:latest
 
-# Run the container
-docker run --env-file .env -p 8000:8000 shlomi10/pdf-trivia-app:latest
+# Run with Docker Compose
+docker-compose up -d
 ```
 
----
+### 4. Manual Installation
+```bash
+# Install dependencies
+pip install -r requirements.txt
 
-## 🔐 Authentication Flow
+# Initialize database
+python db/db.py
 
-| Endpoint | Method | Description | Auth Required |
-|----------|--------|-------------|---------------|
-| `/register` | POST | Create new user account | ❌ |
-| `/login` | POST | Login and receive JWT token | ❌ |
-| `/upload-pdf/` | POST | Upload PDF and generate trivia | ✅ |
-| `/scores/` | GET | View user score history | ✅ |
-
-**Authentication Header:**
-```http
-Authorization: Bearer <your_jwt_token>
+# Run the application
+uvicorn main:app --host 0.0.0.0 --port 8000 --reload
 ```
 
----
+### 5. Access the Application
+Open your browser and navigate to `http://localhost:8000`
 
-## ☁️ AWS S3 Integration
+## 🎯 Usage Guide
 
-The application now supports secure PDF storage on AWS S3:
+### 📝 **Getting Started**
+1. **Register/Login** - Create your account or sign in
+2. **Upload PDF** - Choose any PDF document from your device
+3. **Generate Trivia** - AI automatically creates questions from your content
+4. **Play & Learn** - Answer questions and track your progress
+5. **Review Scores** - Check your trivia history and performance
 
-- **Automatic Upload:** PDFs are automatically uploaded to your S3 bucket
-- **Secure Access:** Uses IAM credentials for secure file operations
-- **File Management:** Automatic cleanup and organization
-- **Scalable Storage:** No local storage limitations
+### 🎮 **Game Features**
+- **Adaptive Difficulty**: Questions range from basic facts to expert-level details
+- **Multiple Choice**: 4 options per question with immediate feedback
+- **Progress Tracking**: See your improvement over time
+- **Instant Results**: Get explanations for correct answers
 
-### S3 Bucket Setup
+## 🏛️ Architecture Overview
 
-1. Create an S3 bucket in your AWS account
-2. Configure IAM user with S3 permissions:
-   ```json
-   {
-     "Version": "2012-10-17",
-     "Statement": [
-       {
-         "Effect": "Allow",
-         "Action": [
-           "s3:GetObject",
-           "s3:PutObject",
-           "s3:DeleteObject"
-         ],
-         "Resource": "arn:aws:s3:::your-bucket-name/*"
-       }
-     ]
-   }
-   ```
-3. Add credentials to your `.env` file
-
----
-
-## 🚀 CI/CD Pipeline
-
-This project includes automated GitHub Actions workflow:
-
-- **Automatic Building:** Docker images built on every push
-- **Docker Hub Publishing:** Images pushed to Docker Hub registry
-- **Multi-platform Support:** Builds for AMD64 and ARM64
-- **Tag Management:** Automatic versioning with Git tags
-
-### Workflow Triggers
-- Push to `main` branch
-- Pull requests to `main`
-- Git tag creation (for releases)
-
----
-
-## 📦 Dependencies
-
-```txt
-fastapi>=0.104.1
-uvicorn[standard]>=0.24.0
-python-multipart>=0.0.6
-python-dotenv>=1.0.0
-openai>=1.3.0
-pillow>=10.1.0
-jinja2>=3.1.2
-aiofiles>=23.2.1
-pymupdf>=1.23.0
-sqlalchemy>=2.0.23
-passlib[bcrypt]>=1.7.4
-python-jose>=3.3.0
-boto3>=1.34.0
-botocore>=1.34.0
+```
+┌─────────────────┐    ┌─────────────────┐    ┌─────────────────┐
+│   Frontend      │    │   FastAPI       │    │   PostgreSQL    │
+│   (HTML/CSS/JS) │◄──►│   Backend       │◄──►│   Database      │
+└─────────────────┘    └─────────────────┘    └─────────────────┘
+                              │                         │
+                              ▼                         ▼
+                       ┌─────────────────┐    ┌─────────────────┐
+                       │   OpenAI API    │    │   AWS S3        │
+                       │   (GPT-4)       │    │   Storage       │
+                       └─────────────────┘    └─────────────────┘
 ```
 
----
+### **Data Flow**
+1. **Upload**: PDF files are uploaded and stored in AWS S3
+2. **Processing**: PyMuPDF extracts text content from PDF
+3. **AI Generation**: OpenAI GPT-4 creates trivia questions
+4. **Storage**: Questions and user data stored in PostgreSQL
+5. **Gaming**: Interactive web interface for playing trivia
+
+## 🐳 Docker Hub
+
+The application is available as a Docker image on Docker Hub:
+
+**Pull the image:**
+```bash
+docker pull shlomi10/pdf-trivia-app:latest
+```
+
+**Available tags:**
+- `latest` - Latest stable release
+- `v1.0` - Specific version releases
+- Build numbers for CI/CD tracking
+
+## 🔄 CI/CD Pipeline
+
+Automated deployment pipeline using GitHub Actions:
+
+- ✅ **Continuous Integration**: Automated testing on every commit
+- 🏗️ **Docker Build**: Multi-stage builds for optimized images
+- 📦 **Registry Push**: Automatic pushes to Docker Hub
+- 🚀 **Deployment**: Ready for production deployment
 
 ## 🤝 Contributing
 
-1. Fork the repository
-2. Create a feature branch (`git checkout -b feature/amazing-feature`)
-3. Commit your changes (`git commit -m 'Add amazing feature'`)
-4. Push to the branch (`git push origin feature/amazing-feature`)
-5. Open a Pull Request
+We welcome contributions! Here's how you can help:
 
----
+1. **Fork** the repository
+2. **Create** a feature branch (`git checkout -b feature/amazing-feature`)
+3. **Commit** your changes (`git commit -m 'Add amazing feature'`)
+4. **Push** to the branch (`git push origin feature/amazing-feature`)
+5. **Open** a Pull Request
 
-## 📄 API Documentation
+### Development Setup
+```bash
+# Clone your fork
+git clone https://github.com/your-username/pdf-trivia-generator.git
 
-Once running, visit:
-- **Swagger UI:** [http://localhost:8000/docs](http://localhost:8000/docs)
-- **ReDoc:** [http://localhost:8000/redoc](http://localhost:8000/redoc)
+# Install development dependencies
+pip install -r requirements.txt
 
----
+# Run tests
+pytest
 
-## 🐛 Troubleshooting
+# Start development server
+uvicorn main:app --reload
+```
 
-### Common Issues
+## 📋 API Documentation
 
-**PDF Upload Fails:**
-- Check AWS credentials in `.env`
-- Verify S3 bucket permissions
-- Ensure bucket exists and is accessible
+Once running, visit `/docs` for interactive API documentation powered by FastAPI's automatic OpenAPI generation.
+
+### Key Endpoints:
+- `POST /upload-pdf` - Upload PDF and generate trivia
+- `POST /save-score` - Save game results
+- `GET /scores` - Retrieve user's trivia history
+- `POST /login` - User authentication
+- `POST /register` - User registration
+
+## 🧪 Testing
+
+Run the test suite to ensure everything works correctly:
+
+```bash
+# Install test dependencies
+pip install pytest pytest-asyncio httpx
+
+# Run tests
+pytest tests/ -v
+
+# Run with coverage
+pytest --cov=. tests/
+
+# Test specific components
+pytest tests/test_auth.py
+pytest tests/test_trivia_generation.py
+```
+
+## 🔧 Configuration
+
+### Environment Variables:
+```env
+# Required
+OPENAI_API_KEY=your_openai_api_key
+AWS_ACCESS_KEY_ID=your_aws_access_key
+AWS_SECRET_ACCESS_KEY=your_aws_secret_key
+
+# Optional
+SECRET_KEY=your_jwt_secret_key
+ACCESS_TOKEN_EXPIRE_MINUTES=60
+S3_BUCKET=your_s3_bucket_name
+AWS_REGION=us-east-1
+```
+
+## 🔒 Security Features
+
+- **JWT Authentication** with secure token management
+- **Password Hashing** using bcrypt with salt
+- **SQL Injection Protection** via SQLAlchemy ORM
+- **File Upload Validation** with content type checking
+- **Secure Cookie Handling** with HttpOnly flags
+
+## 📊 Performance
+
+- **Fast Response Times** with FastAPI's async capabilities
+- **Efficient PDF Processing** using PyMuPDF
+- **Scalable Architecture** with Docker containerization
+- **Optimized Database** queries with SQLAlchemy
+
+## 🛠️ Troubleshooting
+
+### Common Issues:
 
 **OpenAI API Errors:**
-- Verify API key is correct
-- Check OpenAI account has sufficient credits
-- Ensure API key has proper permissions
+```bash
+# Check your API key
+echo $OPENAI_API_KEY
+```
 
-**Docker Issues:**
-- Ensure Docker is running
-- Check port 8000 is not in use
-- Verify environment variables are set
+**Database Connection:**
+```bash
+# Verify PostgreSQL is running
+docker-compose logs db
+```
 
----
+**File Upload Issues:**
+```bash
+# Check AWS credentials
+aws s3 ls
+```
 
-## 📝 License
+## 📈 Roadmap
 
-MIT License © 2025 [Shlomi Gross](https://github.com/shlomi10)
+- [ ] **Multi-language Support** - Support for non-English PDFs
+- [ ] **Team Competitions** - Multiplayer trivia battles
+- [ ] **Question Categories** - Filter by topic or difficulty
+- [ ] **Export Features** - Download trivia as Kahoot/Quizlet format
+- [ ] **Mobile App** - Native iOS/Android applications
+- [ ] **Analytics Dashboard** - Detailed performance insights
+
+## 📄 License
+
+This project is licensed under the MIT License.
+
+```
+MIT License
+
+Copyright (c) 2024 Shlomi
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal
@@ -331,7 +316,25 @@ AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
 LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
+```
+
+## 🙏 Acknowledgments
+
+- **OpenAI** for providing the GPT-4 API
+- **FastAPI** team for the excellent web framework
+- **AWS** for reliable cloud infrastructure
+- **Docker** for containerization technology
+
+## 📞 Contact
+
+**Shlomi** - [@shlomi10](https://github.com/shlomi10)
+
+**Project Link**: [https://github.com/shlomi10/pdf-trivia-generator](https://github.com/shlomi10/pdf-trivia-generator)
+
+**Docker Hub**: [https://hub.docker.com/r/shlomi10/pdf-trivia-app](https://hub.docker.com/r/shlomi10/pdf-trivia-app)
 
 ---
 
-⭐ **If you found this project helpful, please give it a star!** ⭐
+⭐ **Star this repository if you found it helpful!**
+
+![Footer](https://img.shields.io/badge/Made%20with-❤️-red?style=for-the-badge)

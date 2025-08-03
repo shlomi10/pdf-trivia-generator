@@ -1,7 +1,9 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
+    <meta charset="UTF-8">
     <title>My Scores</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
     <link rel="stylesheet" href="/static/style.css">
     <link rel="icon" href="/static/favicon.ico" type="image/x-icon">
     <style>
@@ -10,17 +12,12 @@
             background-color: #111;
             color: white;
             margin: 0;
+            padding: 0;
             animation: fadeIn 0.6s ease-in-out;
             text-shadow: -1px -1px 0 #000,
-            1px -1px 0 #000,
-            -1px 1px 0 #000,
-            1px 1px 0 #000;
-        }
-
-        .content-wrapper {
-            max-width: 800px;
-            margin: 2rem auto;
-            padding: 0 1rem;
+                         1px -1px 0 #000,
+                        -1px 1px 0 #000,
+                         1px 1px 0 #000;
         }
 
         @keyframes fadeIn {
@@ -34,15 +31,45 @@
             }
         }
 
+        nav {
+            background-color: rgba(0, 0, 0, 0.7);
+            padding: 1rem 2rem;
+            display: flex;
+            justify-content: center;
+            flex-wrap: wrap;
+            gap: 1rem;
+            max-width: 800px;
+            margin: 0 auto 2rem auto;
+            border-radius: 8px;
+        }
+
+        nav a, nav span {
+            color: white;
+            font-weight: bold;
+            text-decoration: none;
+            font-size: 1rem;
+        }
+
+        nav a:hover {
+            color: #4ade80;
+        }
+
+        .content-wrapper {
+            max-width: 800px;
+            margin: 2rem auto;
+            padding: 0 1rem;
+        }
+
         table {
             width: 100%;
             border-collapse: collapse;
             margin-top: 2rem;
+            font-size: 0.9rem;
         }
 
         th, td {
             border: 1px solid #444;
-            padding: 0.75rem;
+            padding: 0.6rem;
             text-align: center;
         }
 
@@ -69,45 +96,52 @@
             background-color: #0056b3;
         }
 
-        nav {
-            background-color: rgba(0, 0, 0, 0.7);
-            padding: 1rem 2rem;
-            display: flex;
-            justify-content: center;
-            flex-wrap: wrap;
-            gap: 1rem;
-            max-width: 800px;
-            margin: 0 auto 2rem auto;
-            border-radius: 8px;
-        }
+        @media (max-width: 600px) {
+            table, thead, tbody, th, td, tr {
+                display: block;
+            }
 
-        nav a, nav span {
-            color: white;
-            font-weight: bold;
-            text-decoration: none;
-            font-size: 1rem;
-            text-shadow: -1px -1px 0 #000,
-            1px -1px 0 #000,
-            -1px 1px 0 #000,
-            1px 1px 0 #000;
-        }
+            thead {
+                display: none;
+            }
 
-        nav a:hover {
-            color: #4ade80;
-        }
+            tr {
+                margin-bottom: 1rem;
+                background-color: #1a1a1a;
+                padding: 1rem;
+                border-radius: 8px;
+            }
 
+            td {
+                text-align: left;
+                border: none;
+                padding: 0.5rem 0;
+                position: relative;
+            }
+
+            td::before {
+                content: attr(data-label);
+                font-weight: bold;
+                display: inline-block;
+                width: 100px;
+            }
+
+            .content-wrapper {
+                padding: 1rem;
+            }
+        }
     </style>
 </head>
 <body>
 
 {% if username %}
-  <h2 class="fade-in">Welcome, {{ username }} 👋</h2>
+  <h2 class="fade-in" style="text-align: center;">Welcome, {{ username }} 👋</h2>
 {% endif %}
 
 <nav>
     <a href="/">🏠 Home</a>
     {% if username %}
-    <span style="margin-inline: 1rem;">👋 Hello {{ username }}</span>
+    <span>👋 Hello {{ username }}</span>
     <a href="/upload">📤 Upload</a>
     <a href="/scores">📊 My Scores</a>
     <a href="/logout">🚪 Logout</a>
@@ -116,7 +150,6 @@
     <a href="/register">📝 Register</a>
     {% endif %}
 </nav>
-
 
 <div class="content-wrapper">
     <h1>📊 My Trivia Scores</h1>
@@ -133,10 +166,10 @@
         <tbody>
         {% for score in scores %}
         <tr>
-            <td>{{ loop.index }}</td>
-            <td>{{ score.file_key }}</td>
-            <td>{{ score.score if score.score is not none else 'Not finished' }}</td>
-            <td>{{ score.uploaded_at.strftime("%Y-%m-%d %H:%M") }}</td>
+            <td data-label="#"> {{ loop.index }} </td>
+            <td data-label="File"> {{ score.file_key }} </td>
+            <td data-label="Score"> {{ score.score if score.score is not none else 'Not finished' }} </td>
+            <td data-label="Date"> {{ score.uploaded_at.strftime("%Y-%m-%d %H:%M") }} </td>
         </tr>
         {% endfor %}
         </tbody>
