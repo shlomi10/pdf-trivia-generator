@@ -2,90 +2,38 @@
 <html>
 <head>
     <title>Register</title>
-    <link rel="icon" href="/static/favicon.ico" type="image/x-icon"/>
-    <link rel="stylesheet" href="/static/style.css"/>
+    <link rel="stylesheet" href="/static/style.css" />
+    <link rel="icon" href="/static/favicon.ico" type="image/x-icon" />
     <style>
         body {
             background-image: url('/static/bg.jpg');
             background-size: cover;
             background-position: center;
-            color: white;
             margin: 0;
-            padding: 0;
-            animation: fadeIn 1s ease-in;
             font-family: 'Michroma', sans-serif;
-            text-align: center;
-        }
-
-        @keyframes fadeIn {
-            from {
-                opacity: 0;
-                transform: translateY(20px);
-            }
-            to {
-                opacity: 1;
-                transform: translateY(0);
-            }
-        }
-
-        nav {
-            background-color: rgba(0, 0, 0, 0.7);
-            padding: 1rem 2rem;
-            display: flex;
-            justify-content: center;
-            flex-wrap: wrap;
-            gap: 1rem;
-            max-width: 800px;
-            margin: 0 auto 2rem auto;
-            border-radius: 8px;
-        }
-
-        nav a, nav span {
             color: white;
-            font-weight: bold;
-            text-decoration: none;
-            font-size: 1rem;
-            text-shadow: -1px -1px 0 #000,
-            1px -1px 0 #000,
-            -1px 1px 0 #000,
-            1px 1px 0 #000;
         }
 
-        nav a:hover {
-            color: #4ade80;
-        }
-
-        .page-wrapper {
+        .container {
             display: flex;
             justify-content: center;
             align-items: center;
             min-height: 100vh;
-            padding: 0 1rem;
-            background-color: #111;
+            padding: 1rem;
         }
-
-
-        .container {
-            max-width: 400px;
-            width: 100%;
-            padding: 2rem;
-            background-color: #1e1e1e;
-            border-radius: 8px;
-            box-shadow: 0 0 10px rgba(0, 0, 0, 0.5);
-        }
-
 
         form {
-            background-color: rgba(0, 0, 0, 0.7);
+            background-color: rgba(0, 0, 0, 0.85);
             padding: 2rem;
-            border-radius: 12px;
+            border-radius: 10px;
+            max-width: 400px;
             width: 100%;
-            box-shadow: 0 0 10px #000;
+            box-shadow: 0 0 25px rgba(0, 0, 0, 0.8);
         }
 
-        form h1 {
+        h1 {
             text-align: center;
-            margin-bottom: 2rem;
+            margin-bottom: 1.5rem;
         }
 
         .input-group {
@@ -94,11 +42,11 @@
         }
 
         .input-group input {
-            background: transparent;
-            border: 2px solid #4ade80;
-            border-radius: 6px;
-            padding: 0.75rem;
             width: 100%;
+            padding: 0.75rem;
+            border-radius: 6px;
+            border: 2px solid #4ade80;
+            background: transparent;
             color: white;
             font-size: 1rem;
         }
@@ -108,93 +56,97 @@
             left: 12px;
             top: 50%;
             transform: translateY(-50%);
-            color: #ccc;
-            transition: 0.3s ease;
-            pointer-events: none;
             background-color: rgba(0, 0, 0, 0.7);
             padding: 0 5px;
+            color: #aaa;
+            pointer-events: none;
+            transition: 0.2s ease;
         }
 
         .input-group input:focus + label,
         .input-group input:not(:placeholder-shown) + label {
             top: -10px;
-            left: 10px;
             font-size: 0.8rem;
             color: #4ade80;
         }
 
         button {
-            font-family: 'Michroma', sans-serif;
+            width: 100%;
             background-color: #4ade80;
             color: black;
-            border: none;
-            padding: 0.75rem 1.5rem;
             font-weight: bold;
-            width: 100%;
-            border-radius: 6px;
             font-size: 1.1rem;
+            padding: 0.75rem;
+            border: none;
+            border-radius: 6px;
+            font-family: 'Michroma', sans-serif;
             cursor: pointer;
-            transition: background-color 0.2s ease, transform 0.2s ease;
+            transition: 0.2s ease;
         }
 
-
         button:hover {
-            background-color: #34d399;
-            transform: scale(1.03);
+            background-color: #22c55e;
+        }
+
+        nav {
+            text-align: center;
+            margin-top: 1.5rem;
+        }
+
+        nav a {
+            color: white;
+            text-decoration: none;
+            margin: 0 1rem;
+            font-weight: bold;
+        }
+
+        nav a:hover {
+            color: #4ade80;
+        }
+
+        .error-message {
+            color: #f87171;
+            background: rgba(0,0,0,0.4);
+            padding: 0.75rem;
+            margin-bottom: 1rem;
+            border-radius: 6px;
+            text-align: center;
         }
     </style>
 </head>
 <body>
 
-{% if username %}
-<h2 class="fade-in">Welcome, {{ username }} 👋</h2>
-{% endif %}
-
-
-<nav>
-    <a href="/">🏠 Home</a>
-    {% if username %}
-    <span style="margin-inline: 1rem;">👋 Hello {{ username }}</span>
-    <a href="/upload">📤 Upload</a>
-    <a href="/scores">📊 My Scores</a>
-    <a href="/logout">🚪 Logout</a>
-    {% else %}
-    <a href="/login">🔐 Login</a>
-    <a href="/register">📝 Register</a>
-    {% endif %}
-</nav>
-
-<div class="page-wrapper">
-    <div class="container">
+<div class="container">
+    <form method="post" action="/register">
+        <h1>Register</h1>
 
         {% if error %}
-        <div style="color: #f87171; background: rgba(0,0,0,0.4); padding: 0.75rem; margin-bottom: 1rem; border-radius: 6px;">
-            {{ error|safe }}
-        </div>
+        <div class="error-message">{{ error|safe }}</div>
         {% endif %}
 
-        <form action="/register" method="post">
-            <h1>Register</h1>
+        <div class="input-group">
+            <input type="text" name="username" value="{{ username or '' }}" required placeholder=" " />
+            <label>Username</label>
+        </div>
 
-            <div class="input-group">
-                <input type="text" name="username" value="{{ username or '' }}" required placeholder=" "/>
-                <label>Username</label>
-            </div>
+        <div class="input-group">
+            <input type="email" name="email" value="{{ email or '' }}" required placeholder=" " />
+            <label>Email</label>
+        </div>
 
-            <div class="input-group">
-                <input type="email" name="email" value="{{ email or '' }}" required placeholder=" "/>
-                <label>Email</label>
-            </div>
+        <div class="input-group">
+            <input type="password" name="password" required placeholder=" " />
+            <label>Password</label>
+        </div>
 
-            <div class="input-group">
-                <input type="password" name="password" required placeholder=" "/>
-                <label>Password</label>
-            </div>
+        <button type="submit">📝 Register</button>
 
-            <button type="submit">📝 Register</button>
-        </form>
-    </div>
-
+        <nav>
+            <a href="/">🏠 Home</a>
+            <a href="/login">🔐 Login</a>
+        </nav>
+    </form>
 </div>
+
 </body>
 </html>
