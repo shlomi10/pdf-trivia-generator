@@ -7,7 +7,8 @@ python-multipart
 aiofiles
 
 # 🔐 Authentication & Security
-passlib[bcrypt]
+passlib==1.7.4
+bcrypt==3.2.2
 python-jose[cryptography]
 
 # 🧠 OpenAI API Integration
@@ -28,5 +29,3 @@ psycopg2-binary
 
 # ☁️ AWS S3 Integration
 boto3
-
-bcrypt==4.0.1

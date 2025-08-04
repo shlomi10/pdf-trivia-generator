@@ -20,8 +20,12 @@ jobs:
       - name: 🔑 Log in to DockerHub
         run: echo "${{ secrets.DOCKERHUB_TOKEN }}" | docker login -u "${{ secrets.DOCKERHUB_USER }}" --password-stdin
 
-      - name: 🏗️ Build Docker image (only latest)
-        run: docker build -t ${{ env.IMAGE_NAME }}:latest .
+      - name: 🏗️ Build Docker image with build number
+        run: |
+          IMAGE_TAG=${{ github.run_number }}
+          docker build -t ${{ env.IMAGE_NAME }}:$IMAGE_TAG .
 
       - name: 📤 Push Docker image
-        run: docker push ${{ env.IMAGE_NAME }}:latest
+        run: |
+          IMAGE_TAG=${{ github.run_number }}
+          docker push ${{ env.IMAGE_NAME }}:$IMAGE_TAG
