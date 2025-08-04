@@ -54,7 +54,7 @@ async def register(
     if existing_user:
         return templates.TemplateResponse("register.html", {
             "request": request,
-            "error": "Username already exists. Please choose another."
+            "error": "Username already exists.<br>Please choose another."
         })
 
     hashed_password = get_password_hash(password)
