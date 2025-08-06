@@ -1,181 +1,32 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <title>My Scores</title>
-    <meta name="viewport" content="width=device-width, initial-scale=1">
-    <link rel="stylesheet" href="/static/style.css">
-    <link rel="icon" href="/static/favicon.ico" type="image/x-icon">
-    <style>
-        body {
-            font-family: 'Michroma', sans-serif;
-            background-color: #111;
-            color: white;
-            margin: 0;
-            padding: 0;
-            animation: fadeIn 0.6s ease-in-out;
-            text-shadow: -1px -1px 0 #000,
-                         1px -1px 0 #000,
-                        -1px 1px 0 #000,
-                         1px 1px 0 #000;
-        }
+{% extends "base.html" %}
 
-        @keyframes fadeIn {
-            from {
-                opacity: 0;
-                transform: translateY(10px);
-            }
-            to {
-                opacity: 1;
-                transform: translateY(0);
-            }
-        }
+{% block title %}My Scores - Trivia Game{% endblock %}
 
-        nav {
-            background-color: rgba(0, 0, 0, 0.7);
-            padding: 1rem 2rem;
-            display: flex;
-            justify-content: center;
-            flex-wrap: wrap;
-            gap: 1rem;
-            max-width: 800px;
-            margin: 0 auto 2rem auto;
-            border-radius: 8px;
-        }
-
-        nav a, nav span {
-            color: white;
-            font-weight: bold;
-            text-decoration: none;
-            font-size: 1rem;
-        }
-
-        nav a:hover {
-            color: #4ade80;
-        }
-
-        .content-wrapper {
-            max-width: 800px;
-            margin: 2rem auto;
-            padding: 0 1rem;
-        }
-
-        table {
-            width: 100%;
-            border-collapse: collapse;
-            margin-top: 2rem;
-            font-size: 0.9rem;
-        }
-
-        th, td {
-            border: 1px solid #444;
-            padding: 0.6rem;
-            text-align: center;
-        }
-
-        th {
-            background-color: #222;
-        }
-
-        tr:nth-child(even) {
-            background-color: #1a1a1a;
-        }
-
-        .home-link {
-            display: inline-block;
-            margin-top: 2rem;
-            background-color: #007bff;
-            color: white;
-            padding: 0.6rem 1.2rem;
-            border-radius: 5px;
-            text-decoration: none;
-            font-weight: bold;
-        }
-
-        .home-link:hover {
-            background-color: #0056b3;
-        }
-
-        @media (max-width: 600px) {
-            table, thead, tbody, th, td, tr {
-                display: block;
-            }
-
-            thead {
-                display: none;
-            }
-
-            tr {
-                margin-bottom: 1rem;
-                background-color: #1a1a1a;
-                padding: 1rem;
-                border-radius: 8px;
-            }
-
-            td {
-                text-align: left;
-                border: none;
-                padding: 0.5rem 0;
-                position: relative;
-            }
-
-            td::before {
-                content: attr(data-label);
-                font-weight: bold;
-                display: inline-block;
-                width: 100px;
-            }
-
-            .content-wrapper {
-                padding: 1rem;
-            }
-        }
-    </style>
-</head>
-<body>
-
-{% if username %}
-  <h2 class="fade-in" style="text-align: center;">Welcome, {{ username }} 👋</h2>
-{% endif %}
-
-<nav>
-    <a href="/">🏠 Home</a>
-    {% if username %}
-    <span>👋 Hello {{ username }}</span>
-    <a href="/upload">📤 Upload</a>
-    <a href="/scores">📊 My Scores</a>
-    <a href="/logout">🚪 Logout</a>
-    {% else %}
-    <a href="/login">🔐 Login</a>
-    <a href="/register">📝 Register</a>
-    {% endif %}
-</nav>
-
+{% block content %}
 <div class="content-wrapper">
-    <h1>📊 My Trivia Scores</h1>
+  <h1>📊 My Trivia Scores</h1>
 
-    <table>
-        <thead>
-        <tr>
-            <th>#</th>
-            <th>File</th>
-            <th>Score</th>
-            <th>Date</th>
-        </tr>
-        </thead>
-        <tbody>
-        {% for score in scores %}
-        <tr>
-            <td data-label="#"> {{ loop.index }} </td>
-            <td data-label="File"> {{ score.file_key }} </td>
-            <td data-label="Score"> {{ score.score if score.score is not none else 'Not finished' }} </td>
-            <td data-label="Date"> {{ score.uploaded_at.strftime("%Y-%m-%d %H:%M") }} </td>
-        </tr>
-        {% endfor %}
-        </tbody>
-    </table>
+  <table>
+    <thead>
+      <tr>
+        <th>#</th>
+        <th>File</th>
+        <th>Score</th>
+        <th>Date</th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for score in scores %}
+      <tr>
+        <td data-label="#">{{ loop.index }}</td>
+        <td data-label="File">{{ score.file_key }}</td>
+        <td data-label="Score">{{ score.score if score.score is not none else 'Not finished' }}</td>
+        <td data-label="Date">{{ score.uploaded_at.strftime("%Y-%m-%d %H:%M") }}</td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
 
-    <a href="/" class="home-link">🏠 Back to Home</a>
+  <a href="/" class="home-link">🏠 Back to Home</a>
 </div>
-</body>
-</html>
+{% endblock %}

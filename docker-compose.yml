@@ -2,7 +2,7 @@ version: '3.9'
 
 services:
   web:
-    image: shlomi10/pdf-trivia-app:17
+    build: .
     container_name: pdf_trivia_app
     ports:
       - "8000:8000"
