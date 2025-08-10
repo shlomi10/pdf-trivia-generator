@@ -89,6 +89,8 @@ async def save_score(game_id: int = Form(...), score: int = Form(...), db: Sessi
 @app.get("/scores", response_class=HTMLResponse)
 def show_scores(request: Request, db: Session = Depends(get_db), current_user: User = Depends(get_current_user)):
     scores = db.query(ImageTrivia).filter(ImageTrivia.user_id == current_user.id).order_by(ImageTrivia.uploaded_at.desc()).all()
+    for s in scores:
+        s.display_name = s.file_key.split("_", 1)[-1]
     return templates.TemplateResponse("scores.html", {
         "request": request,
         "scores": scores,

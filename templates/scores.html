@@ -3,30 +3,34 @@
 {% block title %}My Scores - Trivia Game{% endblock %}
 
 {% block content %}
-<div class="content-wrapper">
-  <h1>📊 My Trivia Scores</h1>
+<div style="display: flex; justify-content: center; align-items: center; min-height: 80vh;">
+  <div style="background-color: rgba(0, 0, 0, 0.75); padding: 2rem; border-radius: 12px; width: 100%; max-width: 800px; box-shadow: 0 0 10px #000; color: white;">
+    <h1 style="text-align: center;">📊 My Trivia Scores</h1>
 
-  <table>
-    <thead>
-      <tr>
-        <th>#</th>
-        <th>File</th>
-        <th>Score</th>
-        <th>Date</th>
-      </tr>
-    </thead>
-    <tbody>
-      {% for score in scores %}
-      <tr>
-        <td data-label="#">{{ loop.index }}</td>
-        <td data-label="File">{{ score.file_key }}</td>
-        <td data-label="Score">{{ score.score if score.score is not none else 'Not finished' }}</td>
-        <td data-label="Date">{{ score.uploaded_at.strftime("%Y-%m-%d %H:%M") }}</td>
-      </tr>
-      {% endfor %}
-    </tbody>
-  </table>
+    <table style="width: 100%; border-collapse: collapse; margin-top: 1rem;">
+      <thead>
+        <tr>
+          <th style="text-align: center; padding: 0.5rem;">#</th>
+          <th style="text-align: center; padding: 0.5rem;">File</th>
+          <th style="text-align: center; padding: 0.5rem;">Score</th>
+          <th style="text-align: center; padding: 0.5rem;">Date</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for score in scores %}
+        <tr>
+          <td style="text-align: center; padding: 0.5rem;">{{ loop.index }}</td>
+          <td style="text-align: center; padding: 0.5rem;">{{ score.display_name }}</td>
+          <td style="text-align: center; padding: 0.5rem;">{{ score.score if score.score is not none else 'Not finished' }}</td>
+          <td style="text-align: center; padding: 0.5rem;">{{ score.uploaded_at.strftime("%Y-%m-%d %H:%M") }}</td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
 
-  <a href="/" class="home-link">🏠 Back to Home</a>
+    <div style="text-align: center; margin-top: 1rem;">
+      <a href="/" class="home-link" style="color: white; text-decoration: none;">🏠 Back to Home</a>
+    </div>
+  </div>
 </div>
 {% endblock %}
