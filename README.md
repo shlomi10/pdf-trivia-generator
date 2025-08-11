@@ -10,9 +10,9 @@
 [![PostgreSQL](https://img.shields.io/badge/PostgreSQL-336791?style=for-the-badge&logo=postgresql&logoColor=white)](https://www.postgresql.org/)
 [![AWS S3](https://img.shields.io/badge/AWS%20S3-FF9900?style=for-the-badge&logo=amazon-s3&logoColor=white)](https://aws.amazon.com/s3/)
 
-> 🚀 **Transform any PDF into an interactive trivia game powered by GPT-4!**
+> 🚀 **Transform any PDF into an interactive trivia game powered by GPT-5!**
 
-A modern web application that extracts content from PDF documents and automatically generates engaging trivia questions using OpenAI's GPT-4. Perfect for educators, students, and anyone looking to gamify their learning experience.
+A modern web application that extracts content from PDF documents and automatically generates engaging trivia questions using OpenAI's GPT-5. Perfect for educators, students, and anyone looking to gamify their learning experience.
 
 [![Live App](https://img.shields.io/badge/🟢%20Live%20App-trivia.runmydocker--app.com-brightgreen?style=for-the-badge&logo=fastapi)](https://trivia.runmydocker-app.com/)
 
@@ -135,7 +135,7 @@ uvicorn main:app --host 0.0.0.0 --port 8000 --reload
         │                       ▼                         ▼
         │              ┌─────────────────┐    ┌─────────────────┐
         │              │   OpenAI API    │    │   AWS S3        │
-        │              │   (GPT-4)       │    │   Storage       │
+        │              │   (GPT-5)       │    │   Storage       │
         │              └─────────────────┘    └─────────────────┘
 ```
 
@@ -308,7 +308,7 @@ SOFTWARE.
 
 ## 🙏 Acknowledgments
 
-- **OpenAI** for providing the GPT-4 API
+- **OpenAI** for providing the GPT-5 API
 - **FastAPI** team for the excellent web framework
 - **AWS** for reliable cloud infrastructure
 - **Docker** for containerization technology
