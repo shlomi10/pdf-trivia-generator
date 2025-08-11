@@ -3,80 +3,118 @@
 {% block title %}Trivia Result{% endblock %}
 
 {% block content %}
-<h1>Your Trivia Game 🎯</h1>
-<div id="game">
-  <div id="setup">
-    <p>Select number of questions to play:</p>
-    <select id="question-count">
-      <option value="3">3 Questions</option>
-      <option value="5" selected>5 Questions</option>
-      <option value="10">10 Questions</option>
-    </select>
-    <br/>
-    <button onclick="startGame()">Generate a Trivia Game</button>
-  </div>
-
-  <div id="quiz" style="display: none;">
-    <p id="live-score" class="score">Score: 0</p>
-    <p id="question-text"></p>
-    <div id="options-container" class="options"></div>
-    <p id="feedback"></p>
-  </div>
+<div id="page-wrap">
+    <h1>Your Trivia Game 🎯</h1>
+    <div id="game">
+        <div id="quiz">
+            <p id="live-score" class="score">Score: 0</p>
+            <p id="question-text"></p>
+            <div id="options-container" class="options"></div>
+            <p id="feedback"></p>
+        </div>
+    </div>
 </div>
 
+<style>
+    #page-wrap {
+        margin-top: 0;
+        padding-top: 0.25rem;
+    }
+    #page-wrap h1 {
+        margin: 0.25rem 0 0.25rem 0;
+        text-align: center;
+    }
+    #quiz {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        gap: 0.4rem;
+        margin-top: 0;
+    }
+    #question-text {
+        background-color: #1f2937;
+        color: #f9fafb;
+        padding: 0.8rem 1.2rem;
+        border-radius: 8px;
+        max-width: 600px;
+        width: 100%;
+        text-align: center;
+        font-size: 1.2rem;
+        margin: 0;
+    }
+    #options-container {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        gap: 0.4rem;
+        margin-top: 0.2rem;
+        width: 100%;
+    }
+    #options-container button {
+        background-color: #4ade80;
+        border: none;
+        padding: 0.75rem 1rem;
+        width: 100%;
+        max-width: 400px;
+        text-align: center;
+        border-radius: 6px;
+        cursor: pointer;
+        font-size: 1rem;
+        transition: background-color 0.2s ease;
+    }
+    #options-container button:hover:not(:disabled) {
+        background-color: #22c55e;
+    }
+    #options-container button:disabled {
+        opacity: 0.6;
+        cursor: default;
+    }
+
+</style>
+
 <script>
-  const fullTrivia = {{ trivia | tojson | safe }};
-  const gameId = {{ game_id }};
-  let trivia = [];
-  let current = 0;
-  let score = 0;
+    const fullTrivia = {{ trivia | tojson | safe }};
+    const gameId = {{ game_id }};
+    const trivia = fullTrivia;
+    let current = 0;
+    let score = 0;
 
-  function startGame() {
-    const count = parseInt(document.getElementById("question-count").value);
-    trivia = fullTrivia.slice(0, count);
-    document.getElementById("setup").style.display = "none";
-    document.getElementById("quiz").style.display = "block";
-    showQuestion();
-  }
+    function showQuestion() {
+        document.getElementById("feedback").innerText = "";
+        const q = trivia[current];
+        document.getElementById("question-text").innerText = q.question;
+        const optionsDiv = document.getElementById("options-container");
+        optionsDiv.innerHTML = "";
+        q.options.forEach(opt => {
+            const btn = document.createElement("button");
+            btn.textContent = opt;
+            btn.onclick = () => {
+                const correct = opt === q.answer;
+                if (correct) {
+                    document.getElementById("feedback").innerText = "✅ Correct!";
+                    score++;
+                } else {
+                    document.getElementById("feedback").innerText = "❌ Wrong! Correct answer: " + q.answer;
+                }
+                document.querySelectorAll("#options-container button").forEach(b => b.disabled = true);
+                updateLiveScore();
+                setTimeout(nextQuestion, 1200);
+            };
+            optionsDiv.appendChild(btn);
+        });
+    }
 
-  function showQuestion() {
-    document.getElementById("feedback").innerText = "";
-    const q = trivia[current];
-    document.getElementById("question-text").innerText = q.question;
+    function updateLiveScore() {
+        document.getElementById("live-score").innerText = `Score: ${score}`;
+    }
 
-    const optionsDiv = document.getElementById("options-container");
-    optionsDiv.innerHTML = "";
-
-    q.options.forEach(opt => {
-      const btn = document.createElement("button");
-      btn.textContent = opt;
-      btn.onclick = () => {
-        const correct = opt === q.answer;
-        if (correct) {
-          document.getElementById("feedback").innerText = "✅ Correct!";
-          score++;
+    async function nextQuestion() {
+        current++;
+        if (current < trivia.length) {
+            showQuestion();
         } else {
-          document.getElementById("feedback").innerText = "❌ Wrong! Correct answer: " + q.answer;
-        }
-        document.querySelectorAll(".options button").forEach(b => b.disabled = true);
-        updateLiveScore();
-        setTimeout(nextQuestion, 2000);
-      };
-      optionsDiv.appendChild(btn);
-    });
-  }
-
-  function updateLiveScore() {
-    document.getElementById("live-score").innerText = `Score: ${score}`;
-  }
-
-  async function nextQuestion() {
-    current++;
-    if (current < trivia.length) {
-      showQuestion();
-    } else {
-      await saveScore();
-      document.getElementById("game").innerHTML = `
+            await saveScore();
+            document.getElementById("game").innerHTML = `
         <h2>🎉 Game Over!</h2>
         <p class="score">Your score: ${score} / ${trivia.length}</p>
         <a href="/upload" style="color: #4ade80;">🔁 Try another PDF</a>
@@ -84,26 +122,27 @@
           <a href="/" style="color: #4ade80; text-decoration: underline;">🏠 Back to Home</a>
         </div>
       `;
+        }
     }
-  }
 
-  async function saveScore() {
-    try {
-      const formData = new FormData();
-      formData.append("game_id", gameId);
-      formData.append("score", score);
-
-      const res = await fetch("/save-score", {
-        method: "POST",
-        body: formData,
-        credentials: "include"
-      });
-
-      const data = await res.json();
-      console.log("Saved score:", data.message);
-    } catch (err) {
-      console.error("Failed to save score:", err);
+    async function saveScore() {
+        try {
+            const formData = new FormData();
+            formData.append("game_id", gameId);
+            formData.append("score", score);
+            await fetch("/save-score", { method: "POST", body: formData, credentials: "include" });
+        } catch (err) {}
     }
-  }
+
+    document.addEventListener("DOMContentLoaded", () => {
+        if (!Array.isArray(trivia) || trivia.length === 0) {
+            document.getElementById("game").innerHTML = `
+        <p>No questions were generated. Try another PDF.</p>
+        <a href="/upload" style="color: #4ade80;">Back</a>
+      `;
+            return;
+        }
+        showQuestion();
+    });
 </script>
 {% endblock %}

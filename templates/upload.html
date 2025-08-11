@@ -10,6 +10,14 @@
   {% if username %}
   <form id="upload-form">
     <input type="file" name="file" accept="application/pdf" required/>
+
+    <label style="display:block; margin:10px 0 6px;">Number of questions</label>
+    <select name="num_questions" style="margin-bottom:12px;">
+      <option value="3" selected>3</option>
+      <option value="5">5</option>
+      <option value="10">10</option>
+    </select>
+
     <button type="submit">Create a Trivia Game</button>
   </form>
 

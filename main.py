@@ -64,10 +64,15 @@ async def register(
     return RedirectResponse(url="/login", status_code=302)
 
 @app.post("/upload-pdf", response_class=HTMLResponse)
-async def upload_pdf(request: Request, file: UploadFile = File(...), current_user: User = Depends(get_current_user)):
+async def upload_pdf(
+    request: Request,
+    file: UploadFile = File(...),
+    num_questions: int = Form(3),
+    current_user: User = Depends(get_current_user)
+):
     file_bytes = await file.read()
     key, _ = upload_and_get_presigned_url(file_bytes, file.filename, file.content_type)
-    trivia = generate_trivia_from_pdf(file_bytes)
+    trivia = generate_trivia_from_pdf(file_bytes, num_questions=num_questions)
     game = create_game(user_id=current_user.id, file_key=key, trivia=trivia)
     return templates.TemplateResponse("result.html", {
         "request": request,
@@ -75,6 +80,7 @@ async def upload_pdf(request: Request, file: UploadFile = File(...), current_use
         "game_id": game.id,
         "username": current_user.username
     })
+
 
 
 @app.post("/save-score")
