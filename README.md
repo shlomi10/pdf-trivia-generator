@@ -14,7 +14,7 @@
 
 A modern web application that extracts content from PDF documents and automatically generates engaging trivia questions using OpenAI's GPT-5. Perfect for educators, students, and anyone looking to gamify their learning experience.
 
-[![Live App](https://img.shields.io/badge/🟢%20Live%20App-trivia.runmydocker--app.com-brightgreen?style=for-the-badge&logo=fastapi)]([https://trivia.runmydocker-app.com/](https://strivia.onrender.com/))
+[![Live App](https://img.shields.io/badge/🟢%20Live%20App-strivia.onrender.com-brightgreen?style=for-the-badge&logo=fastapi)](https://strivia.onrender.com/)
 
 ## ✨ Features
 
