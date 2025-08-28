@@ -44,7 +44,7 @@ A modern web application that extracts content from PDF documents and automatica
 - **[PostgreSQL](https://www.postgresql.org/)** - Advanced open source database
 
 ### **AI & Document Processing**
-- **[OpenAI GPT-4](https://openai.com/)** - State-of-the-art language model for question generation
+- **[OpenAI GPT-5](https://openai.com/)** - State-of-the-art language model for question generation
 - **[PyMuPDF](https://pymupdf.readthedocs.io/)** - High-performance PDF text extraction
 
 ### **Cloud Services**
