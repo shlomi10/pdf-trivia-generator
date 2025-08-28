@@ -15,9 +15,55 @@ from fastapi.templating import Jinja2Templates
 from fastapi.responses import FileResponse
 from auth.auth import get_current_user_optional
 
+import os
+from starlette.middleware.sessions import SessionMiddleware
+from authlib.integrations.starlette_client import OAuth
+
 app = FastAPI()
 app.mount("/static", StaticFiles(directory="static"), name="static")
 templates = Jinja2Templates(directory="templates")
+
+app.add_middleware(SessionMiddleware, secret_key=os.getenv("SESSION_SECRET"))
+
+oauth = OAuth()
+oauth.register(
+    name="google",
+    client_id=os.getenv("GOOGLE_CLIENT_ID"),
+    client_secret=os.getenv("GOOGLE_CLIENT_SECRET"),
+    server_metadata_url="https://accounts.google.com/.well-known/openid-configuration",
+    client_kwargs={"scope": "openid email profile"}
+)
+
+@app.get("/login/google")
+async def login_google(request: Request):
+    redirect_uri = request.url_for("auth_google_callback")
+    return await oauth.google.authorize_redirect(request, redirect_uri)
+
+@app.get("/auth/google/callback", name="auth_google_callback")
+async def auth_google_callback(request: Request, db: Session = Depends(get_db)):
+    token = await oauth.google.authorize_access_token(request)
+    userinfo = await oauth.google.userinfo(token=token)
+    email = userinfo.get("email")
+    name = userinfo.get("name") or (email.split("@")[0] if email else None)
+    if not email:
+        return RedirectResponse(url="/login", status_code=302)
+    user = db.query(User).filter(User.email == email).first()
+    if not user:
+        username_base = (name or email.split("@")[0]).replace(" ", "").lower()
+        username = username_base
+        i = 1
+        while db.query(User).filter(User.username == username).first():
+            i += 1
+            username = f"{username_base}{i}"
+        user = User(username=username, email=email, hashed_password="oauth-google")
+        db.add(user)
+        db.commit()
+        db.refresh(user)
+    jwt_token = create_access_token({"sub": user.username})
+    resp = RedirectResponse(url="/", status_code=302)
+    resp.set_cookie(key="token", value=jwt_token, httponly=True)
+    return resp
+
 
 @app.post("/login", response_class=HTMLResponse)
 async def login(

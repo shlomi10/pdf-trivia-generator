@@ -1,20 +1,27 @@
 {% extends "base.html" %}
-
 {% block title %}Login - Trivia Game{% endblock %}
-
 {% block content %}
 <div style="display: flex; justify-content: center; align-items: center; min-height: 80vh;">
-  <form action="/login" method="post" style="background-color: rgba(0, 0, 0, 0.75); padding: 2rem; border-radius: 12px; width: 100%; max-width: 400px; box-shadow: 0 0 10px #000;">
-    <h1>Login</h1>
-    <div class="input-group">
-      <input type="text" name="username" required placeholder="Username" />
-      <label>Username</label>
-    </div>
-    <div class="input-group">
-      <input type="password" name="password" required placeholder="Password" />
-      <label>Password</label>
-    </div>
-    <button type="submit"><span style="margin-left: -1rem;">🔓 Login</span></button>
-  </form>
+    <form action="/login" method="post">
+        <h1>Login</h1>
+        <div class="input-group">
+            <input type="text" name="username" required placeholder="Username"/>
+            <label>Username</label>
+        </div>
+        <div class="input-group">
+            <input type="password" name="password" required placeholder="Password"/>
+            <label>Password</label>
+        </div>
+
+        <button type="submit">
+            <span style="margin-left: -1rem;">🔓 Login</span>
+        </button>
+
+        <button type="button" onclick="window.location.href='/login/google'" style="margin-top: 1rem; display: flex; align-items: center; justify-content: center; gap: 0.5rem;">
+            <img src="https://www.gstatic.com/firebasejs/ui/2.0.0/images/auth/google.svg" alt="Google" style="width: 20px; height: 20px;" />
+            Sign in with Google
+        </button>
+
+    </form>
 </div>
 {% endblock %}

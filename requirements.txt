@@ -29,3 +29,7 @@ psycopg2-binary
 
 # ☁️ AWS S3 Integration
 boto3
+
+# 🔑 OAuth & Sessions
+itsdangerous
+authlib

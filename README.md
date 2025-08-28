@@ -9,6 +9,7 @@
 [![OpenAI](https://img.shields.io/badge/OpenAI-6f42c1?style=for-the-badge&logo=openai&logoColor=white)](https://openai.com/)
 [![PostgreSQL](https://img.shields.io/badge/PostgreSQL-336791?style=for-the-badge&logo=postgresql&logoColor=white)](https://www.postgresql.org/)
 [![AWS S3](https://img.shields.io/badge/AWS%20S3-FF9900?style=for-the-badge&logo=amazon-s3&logoColor=white)](https://aws.amazon.com/s3/)
+[![Google OAuth](https://img.shields.io/badge/Google%20OAuth-4285f4?style=for-the-badge&logo=google&logoColor=white)](https://developers.google.com/identity)
 
 > 🚀 **Transform any PDF into an interactive trivia game powered by GPT-5!**
 
@@ -24,8 +25,10 @@ A modern web application that extracts content from PDF documents and automatica
 - **Real-time Scoring**: Live score tracking with instant feedback
 - **Cross-Platform Access**: Seamlessly works on desktop and tablet devices
 
-### 🔐 **User Management**
+### 🔐 **User Management & Authentication**
+- **Multiple Login Options**: Traditional username/password or one-click Google OAuth
 - **Secure Authentication**: JWT-based login system with bcrypt password hashing
+- **Google OAuth Integration**: Sign in/Sign up with your Google account instantly
 - **Personal Dashboard**: Track your trivia history and scores
 - **Session Management**: Persistent login with secure cookie handling
 
@@ -54,6 +57,8 @@ A modern web application that extracts content from PDF documents and automatica
 ### **Security & Authentication**
 - **[Passlib](https://passlib.readthedocs.io/)** - Password hashing with bcrypt
 - **[Python-JOSE](https://python-jose.readthedocs.io/)** - JWT token handling
+- **[Google OAuth 2.0](https://developers.google.com/identity/protocols/oauth2)** - Secure Google authentication
+- **[Authlib](https://authlib.org/)** - OAuth client implementation
 - **[FastAPI Security](https://fastapi.tiangolo.com/tutorial/security/)** - OAuth2 with JWT tokens
 
 ### **Frontend**
@@ -74,6 +79,7 @@ A modern web application that extracts content from PDF documents and automatica
 - OpenAI API key
 - AWS credentials for S3
 - PostgreSQL database
+- Google OAuth credentials (for Google login)
 
 ### 1. Clone the Repository
 ```bash
@@ -84,12 +90,37 @@ cd pdf-trivia-generator
 ### 2. Environment Setup
 Create a `.env` file with your credentials:
 ```env
+# OpenAI Configuration
 OPENAI_API_KEY=your_openai_api_key_here
+
+# AWS Configuration
 AWS_ACCESS_KEY_ID=your_aws_access_key
 AWS_SECRET_ACCESS_KEY=your_aws_secret_key
+S3_BUCKET=your_s3_bucket_name
+AWS_REGION=us-east-1
+
+# Google OAuth Configuration
+GOOGLE_CLIENT_ID=your_google_oauth_client_id
+GOOGLE_CLIENT_SECRET=your_google_oauth_client_secret
+
+# Security Configuration
+SECRET_KEY=your_jwt_secret_key
+SESSION_SECRET=your_random_session_secret_for_starlette
+ACCESS_TOKEN_EXPIRE_MINUTES=60
+
+# Database Configuration
+DATABASE_URL=postgresql://username:password@localhost/dbname
 ```
 
-### 3. Docker Deployment (Recommended)
+### 3. Google OAuth Setup
+1. Go to the [Google Cloud Console](https://console.cloud.google.com/)
+2. Create a new project or select an existing one
+3. Enable the Google+ API
+4. Create OAuth 2.0 credentials
+5. Add your domain to authorized origins
+6. Add your callback URL: `http://your-domain.com/auth/google/callback`
+
+### 4. Docker Deployment (Recommended)
 ```bash
 # Pull the latest image from Docker Hub
 docker pull shlomi10/pdf-trivia-app:latest
@@ -98,7 +129,7 @@ docker pull shlomi10/pdf-trivia-app:latest
 docker-compose up -d
 ```
 
-### 4. Manual Installation
+### 5. Manual Installation
 ```bash
 # Install dependencies
 pip install -r requirements.txt
@@ -110,20 +141,26 @@ python db/db.py
 uvicorn main:app --host 0.0.0.0 --port 8000 --reload
 ```
 
-### 5. Access the Application
+### 6. Access the Application
 - **Desktop**: Open your browser and navigate to `http://localhost:8000`
 - **Public Access**: Deploy to a cloud service and access from any device
 
 ## 🎯 Usage Guide
 
-### 📝 **Getting Started**
-1. **Register/Login** - Create your account or sign in
-2. **Upload PDF** - Choose any PDF document from your device
-3. **Generate Trivia** - AI automatically creates questions from your content
-4. **Play & Learn** - Answer questions with intuitive interface
-5. **Review Scores** - Check your trivia history and performance
+### 🔐 **Getting Started**
+1. **Register/Login** - Create your account with username/password or sign in with Google
+2. **One-Click Google Login** - Use your Google account for instant access
+3. **Upload PDF** - Choose any PDF document from your device
+4. **Generate Trivia** - AI automatically creates questions from your content
+5. **Play & Learn** - Answer questions with intuitive interface
+6. **Review Scores** - Check your trivia history and performance
 
-## 🏛️ Architecture Overview
+### **Authentication Options**
+- **Traditional Login**: Username/email and password
+- **Google OAuth**: One-click sign in with your Google account
+- **Account Linking**: Link Google account to existing username-based account
+
+## 🛠️ Architecture Overview
 
 ```
 ┌─────────────────┐    ┌─────────────────┐    ┌─────────────────┐
@@ -137,14 +174,27 @@ uvicorn main:app --host 0.0.0.0 --port 8000 --reload
         │              │   OpenAI API    │    │   AWS S3        │
         │              │   (GPT-5)       │    │   Storage       │
         │              └─────────────────┘    └─────────────────┘
+        │
+        ▼
+┌─────────────────┐
+│  Google OAuth   │
+│   Provider      │
+└─────────────────┘
 ```
+
+### **Authentication Flow**
+1. **User Choice**: Select traditional login or Google OAuth
+2. **Google OAuth**: Redirect to Google, authenticate, return with token
+3. **Account Creation**: New Google users automatically get accounts created
+4. **Session Management**: JWT tokens for API access, secure cookies for web sessions
 
 ### **Data Flow**
 1. **Access**: User opens web app in browser
-2. **Upload**: PDF files uploaded via web interface
-3. **Processing**: Server-side text extraction and AI processing
-4. **Gaming**: Interactive trivia interface
-5. **Storage**: Progress and scores saved to database
+2. **Authentication**: Login with username/password or Google OAuth
+3. **Upload**: PDF files uploaded via web interface
+4. **Processing**: Server-side text extraction and AI processing
+5. **Gaming**: Interactive trivia interface
+6. **Storage**: Progress and scores saved to database
 
 ## 🐳 Docker Hub
 
@@ -156,10 +206,10 @@ docker pull shlomi10/pdf-trivia-app:latest
 ```
 
 **Available tags:**
-- `latest` - Latest stable release
+- `latest` - Latest stable release with Google OAuth support
 - Build numbers for CI/CD tracking
 
-## 🔄 CI/CD Pipeline
+## 📄 CI/CD Pipeline
 
 Automated deployment pipeline using GitHub Actions:
 
@@ -186,6 +236,9 @@ git clone https://github.com/your-username/pdf-trivia-generator.git
 # Install development dependencies
 pip install -r requirements.txt
 
+# Set up Google OAuth for development
+# Make sure to add http://localhost:8000/auth/google/callback to your Google OAuth settings
+
 # Run tests
 pytest
 
@@ -198,11 +251,24 @@ uvicorn main:app --reload
 Once running, visit `/docs` for interactive API documentation powered by FastAPI's automatic OpenAPI generation.
 
 ### Key Endpoints:
+
+#### **Authentication**
+- `POST /register` - Username/email/password registration
+- `POST /login` - Traditional username/password login
+- `GET /login/google` - Initialize Google OAuth flow
+- `GET /auth/google/callback` - Handle Google OAuth callback
+- `POST /logout` - Sign out user (clears session)
+
+#### **Core Functionality**
 - `POST /upload-pdf` - Upload PDF and generate trivia
 - `POST /save-score` - Save game results
 - `GET /scores` - Retrieve user's trivia history
-- `POST /login` - User authentication
-- `POST /register` - User registration
+- `GET /profile` - Get user profile information
+
+#### **User Management**
+- `PUT /profile` - Update user profile
+- `POST /link-google` - Link Google account to existing user
+- `DELETE /unlink-google` - Remove Google account link
 
 ## 🧪 Testing
 
@@ -214,31 +280,56 @@ pip install pytest pytest-asyncio httpx
 
 # Run with coverage
 pytest --cov=. tests/
+
+# Test OAuth flows
+pytest tests/test_oauth.py -v
 ```
 
 ## 🔧 Configuration
 
 ### Environment Variables:
 ```env
-# Required
+# Required - OpenAI
 OPENAI_API_KEY=your_openai_api_key
+
+# Required - AWS
 AWS_ACCESS_KEY_ID=your_aws_access_key
 AWS_SECRET_ACCESS_KEY=your_aws_secret_key
-
-# Optional
-SECRET_KEY=your_jwt_secret_key
-ACCESS_TOKEN_EXPIRE_MINUTES=60
 S3_BUCKET=your_s3_bucket_name
 AWS_REGION=us-east-1
+
+# Required - Google OAuth
+GOOGLE_CLIENT_ID=your_google_oauth_client_id
+GOOGLE_CLIENT_SECRET=your_google_oauth_client_secret
+
+# Required - Security
+SECRET_KEY=your_jwt_secret_key
+SESSION_SECRET=your_random_session_secret_for_starlette
+
+# Optional - Database
+DATABASE_URL=postgresql://user:pass@localhost/dbname
+
+# Optional - Authentication
+ACCESS_TOKEN_EXPIRE_MINUTES=60
+REDIRECT_URL=http://localhost:8000/auth/google/callback
 ```
+
+### Google OAuth Configuration:
+1. **Authorized JavaScript Origins**: Add your domain (e.g., `https://your-app.com`)
+2. **Authorized Redirect URIs**: Add callback URL (e.g., `https://your-app.com/auth/google/callback`)
+3. **Scopes**: Ensure you have access to email and profile information
 
 ## 🔒 Security Features
 
+- **Multiple Authentication Methods**: Traditional login and Google OAuth
 - **JWT Authentication** with secure token management
-- **Password Hashing** using bcrypt with salt
+- **OAuth 2.0 Security**: Google's secure authentication flow
+- **Password Hashing** using bcrypt with salt (for traditional accounts)
 - **SQL Injection Protection** via SQLAlchemy ORM
 - **File Upload Validation** with content type checking
-- **Secure Cookie Handling** with HttpOnly flags
+- **Secure Cookie Handling** with HttpOnly and SameSite flags
+- **CSRF Protection** for OAuth flows
+- **Session Security**: Secure session management with rotation
 - **HTTPS Enforcement** for secure connections
 
 ## 📊 Performance
@@ -247,6 +338,7 @@ AWS_REGION=us-east-1
 - **Efficient PDF Processing** using PyMuPDF
 - **Scalable Architecture** with Docker containerization
 - **Optimized Database** queries with SQLAlchemy
+- **OAuth Caching**: Efficient token validation and user session management
 
 ## 🛠️ Troubleshooting
 
@@ -270,13 +362,31 @@ docker-compose logs db
 aws s3api get-bucket-cors --bucket your-bucket-name
 ```
 
+**Google OAuth Issues:**
+```bash
+# Verify OAuth configuration
+echo $GOOGLE_CLIENT_ID
+echo $GOOGLE_CLIENT_SECRET
+
+# Check callback URL in Google Console matches your environment
+```
+
+### OAuth Troubleshooting:
+- Ensure callback URL matches exactly in Google Console
+- Check that Google+ API is enabled in your project
+- Verify redirect URI includes protocol (http/https)
+- Test with different browsers to rule out cookie issues
+
 ## 📈 Roadmap
 
+- [ ] **Social Login Expansion** - Add Facebook, GitHub, Microsoft OAuth
+- [ ] **Account Merging** - Merge multiple OAuth accounts
 - [ ] **Multi-language Support** - Support for non-English PDFs
-- [ ] **Team Competitions** - Multiplayer trivia battles
+- [ ] **Team Competitions** - Multiplayer trivia battles with Google Groups integration
 - [ ] **Question Categories** - Filter by topic or difficulty
 - [ ] **Export Features** - Download trivia as Kahoot/Quizlet format
-- [ ] **Analytics Dashboard** - Detailed performance insights
+- [ ] **Analytics Dashboard** - Detailed performance insights with Google Analytics integration
+- [ ] **Mobile App** - Native mobile apps with Google Sign-In
 
 ## 📄 License
 
@@ -310,6 +420,7 @@ SOFTWARE.
 
 - **OpenAI** for providing the GPT-5 API
 - **FastAPI** team for the excellent web framework
+- **Google** for OAuth 2.0 services and authentication infrastructure
 - **AWS** for reliable cloud infrastructure
 - **Docker** for containerization technology
 

@@ -1,10 +1,8 @@
 {% extends "base.html" %}
-
 {% block title %}Register - Trivia Game{% endblock %}
-
 {% block content %}
 <div style="display: flex; justify-content: center; align-items: center; min-height: 80vh;">
-  <form method="post" action="/register" style="background-color: rgba(0, 0, 0, 0.75); padding: 2rem; border-radius: 12px; width: 100%; max-width: 400px; box-shadow: 0 0 10px #000;">
+  <form method="post" action="/register">
     <h1>Register</h1>
 
     {% if error %}
@@ -26,7 +24,15 @@
       <label>Password</label>
     </div>
 
-    <button type="submit"><span style="margin-left: -1rem;">📝 Register</span></button>
+    <button type="submit">
+      <span style="margin-left: -1rem;">📝 Register</span>
+    </button>
+
+    <!-- Google button -->
+    <button type="button" onclick="window.location.href='/login/google'" style="margin-top: 1rem; display: flex; align-items: center; justify-content: center; gap: 0.5rem;">
+      <img src="https://www.gstatic.com/firebasejs/ui/2.0.0/images/auth/google.svg" alt="Google" style="width: 20px; height: 20px;" />
+      Sign up with Google
+    </button>
   </form>
 </div>
 {% endblock %}
