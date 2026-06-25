@@ -1,6 +1,4 @@
-import urllib.request
-
-from services.aws_file_utils import get_presigned_url_from_key
+from services.aws_file_utils import get_object_bytes, get_presigned_url_from_key
 
 DEFAULT_PDFS = {
     "alice_in_wonderland": {
@@ -27,14 +25,9 @@ def get_default_pdf_presigned_url(pdf_id: str, expires_in: int = PRESIGNED_URL_E
     return get_presigned_url_from_key(key, expires_in=expires_in), key
 
 
-def _fetch_bytes_from_presigned_url(url: str) -> bytes:
-    with urllib.request.urlopen(url) as response:
-        return response.read()
-
-
 def get_default_pdf_bytes(pdf_id: str) -> tuple[bytes, str]:
-    url, key = get_default_pdf_presigned_url(pdf_id)
-    return _fetch_bytes_from_presigned_url(url), key
+    key = get_default_pdf_s3_key(pdf_id)
+    return get_object_bytes(key), key
 
 
 def list_default_pdfs() -> list[dict]:
