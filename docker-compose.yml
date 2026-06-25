@@ -1,0 +1,16 @@
+version: '3.9'
+
+services:
+  web:
+    image: shlomi10/pdf-trivia-app:latest
+    build: .
+    container_name: pdf_trivia_app
+    ports:
+      - "8000:8000"
+    volumes:
+      - .:/app
+    env_file:
+      - .env
+    environment:
+      - PYTHONUNBUFFERED=1
+    command: uvicorn main:app --host 0.0.0.0 --port 8000 --reload

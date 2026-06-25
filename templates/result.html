@@ -1,0 +1,144 @@
+{% extends "base.html" %}
+
+{% block title %}Trivia Result{% endblock %}
+
+{% block content %}
+<div id="page-wrap">
+    <h1>Your Trivia Game 🎯</h1>
+    {% if guest_mode %}
+    <p style="color: #ffeb3b; margin-bottom: 1rem;">🎮 Guest mode — your score will not be saved to the score board.</p>
+    {% endif %}
+    <div class="upload-option-card" style="max-width: 640px; margin-top: 1rem;">
+        <div id="game">
+        <div id="quiz">
+            <p id="live-score" class="score">Score: 0</p>
+            <p id="question-text"></p>
+            <div id="options-container" class="options"></div>
+            <p id="feedback"></p>
+        </div>
+        </div>
+    </div>
+</div>
+
+<style>
+    #page-wrap {
+        margin-top: 0;
+        padding-top: 0.25rem;
+    }
+    #page-wrap h1 {
+        margin: 0.25rem 0 0.25rem 0;
+        text-align: center;
+    }
+    #quiz {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        gap: 0.4rem;
+        margin-top: 0;
+    }
+    #question-text {
+        background-color: #1f2937;
+        color: #f9fafb;
+        padding: 0.8rem 1.2rem;
+        border-radius: 8px;
+        max-width: 600px;
+        width: 100%;
+        text-align: center;
+        font-size: 1.2rem;
+        margin: 0;
+    }
+    #options-container {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        gap: 0.4rem;
+        margin-top: 0.2rem;
+        width: 100%;
+    }
+
+</style>
+
+<script>
+    const fullTrivia = {{ trivia | tojson | safe }};
+    const gameId = {{ game_id | tojson }};
+    const guestMode = {{ guest_mode | tojson }};
+    const trivia = fullTrivia;
+    let current = 0;
+    let score = 0;
+
+    function showQuestion() {
+        document.getElementById("feedback").innerText = "";
+        const q = trivia[current];
+        document.getElementById("question-text").innerText = q.question;
+        const optionsDiv = document.getElementById("options-container");
+        optionsDiv.innerHTML = "";
+        q.options.forEach(opt => {
+            const btn = document.createElement("button");
+            btn.textContent = opt;
+            btn.onclick = () => {
+                const correct = opt === q.answer;
+                if (correct) {
+                    document.getElementById("feedback").innerText = "✅ Correct!";
+                    score++;
+                } else {
+                    document.getElementById("feedback").innerText = "❌ Wrong! Correct answer: " + q.answer;
+                }
+                document.querySelectorAll("#options-container button").forEach(b => b.disabled = true);
+                updateLiveScore();
+                setTimeout(nextQuestion, 1200);
+            };
+            optionsDiv.appendChild(btn);
+        });
+    }
+
+    function updateLiveScore() {
+        document.getElementById("live-score").innerText = `Score: ${score}`;
+    }
+
+    async function nextQuestion() {
+        current++;
+        if (current < trivia.length) {
+            showQuestion();
+        } else {
+            if (!guestMode) {
+                await saveScore();
+            }
+            const guestNote = guestMode
+                ? `<p style="color: #ffeb3b; margin-top: 0.5rem;">Score not saved — <a href="/login" class="option-link">log in</a> to track results on the score board.</p>`
+                : "";
+            const playAgainUrl = guestMode ? "/upload/guest" : "/upload";
+            document.getElementById("game").innerHTML = `
+        <h2>🎉 Game Over!</h2>
+        <p class="score">Your score: ${score} / ${trivia.length}</p>
+        ${guestNote}
+        <div class="game-actions">
+          <a href="${playAgainUrl}" class="btn btn-block">🔁 Try another PDF</a>
+          <a href="/" class="btn btn-block">🏠 Back to Home</a>
+        </div>
+      `;
+        }
+    }
+
+    async function saveScore() {
+        if (!gameId) return;
+        try {
+            const formData = new FormData();
+            formData.append("game_id", gameId);
+            formData.append("score", score);
+            await fetch("/save-score", { method: "POST", body: formData, credentials: "include" });
+        } catch (err) {}
+    }
+
+    document.addEventListener("DOMContentLoaded", () => {
+        if (!Array.isArray(trivia) || trivia.length === 0) {
+            const backUrl = guestMode ? "/upload/guest" : "/upload";
+            document.getElementById("game").innerHTML = `
+        <p>No questions were generated. Try another PDF.</p>
+        <a href="${backUrl}" class="btn">Back</a>
+      `;
+            return;
+        }
+        showQuestion();
+    });
+</script>
+{% endblock %}

@@ -1,0 +1,23 @@
+{% extends "base.html" %}
+
+{% block title %}Welcome to the Trivia Game{% endblock %}
+
+{% block content %}
+<div class="page-center">
+  <div class="content-card">
+    <h1 class="text-outline glow" style="font-size: 2.75rem; margin-bottom: 1rem;">
+      Welcome to <br/>
+      <span style="color: #4ade80;">The PDF Trivia Game</span>
+    </h1>
+
+    <p class="text-outline" style="font-size: 1.25rem; max-width: 650px; margin: 0 auto;">
+      Turn your documents into fun<br/>
+      upload a PDF and instantly generate trivia questions powered by GPT!
+    </p>
+
+    <p>
+      <button type="button" onclick="window.location.href='/upload'">Start Now →</button>
+    </p>
+  </div>
+</div>
+{% endblock %}

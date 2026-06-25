@@ -1,0 +1,28 @@
+{% extends "base.html" %}
+
+{% block title %}Start Playing - Trivia Game{% endblock %}
+
+{% block content %}
+<div class="container">
+  <h1 class="text-outline">🎯 Ready to Play?</h1>
+  <p class="text-outline">Choose how you want to start</p>
+
+  <div class="upload-option-card choose-card">
+    <div class="choose-option login-option">
+      <p class="choose-headline">
+        🔒 <a href="/login" class="option-link">Log in</a> or <a href="/register" class="option-link">register</a> to save your score on the score board.
+      </p>
+    </div>
+
+    <div class="section-separator"></div>
+
+    <div class="choose-option guest-option-block">
+      <p class="choose-subtitle">Don't want to log in?</p>
+      <p class="guest-btn-wrap">
+        <button type="button" onclick="window.location.href='/upload/guest'">Continue as Guest →</button>
+      </p>
+    </div>
+  </div>
+</div>
+
+{% endblock %}

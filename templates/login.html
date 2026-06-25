@@ -1,0 +1,28 @@
+{% extends "base.html" %}
+{% block title %}Login - Trivia Game{% endblock %}
+{% block content %}
+<div class="page-center">
+    <form action="/login" method="post">
+        <h1>Login</h1>
+        {% if error %}
+        <p style="color: #f87171; margin-bottom: 1rem;">{{ error }}</p>
+        {% endif %}
+        <div class="input-group">
+            <input type="text" name="username" required placeholder=" " />
+            <label>Username</label>
+        </div>
+        <div class="input-group">
+            <input type="password" name="password" required placeholder=" " />
+            <label>Password</label>
+        </div>
+
+        <button type="submit">🔓 Login</button>
+
+        <button type="button" class="btn-google" onclick="window.location.href='/login/google'">
+            <img src="https://www.gstatic.com/firebasejs/ui/2.0.0/images/auth/google.svg" alt="Google" />
+            Sign in with Google
+        </button>
+
+    </form>
+</div>
+{% endblock %}

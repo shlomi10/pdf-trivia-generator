@@ -1,0 +1,35 @@
+{% extends "base.html" %}
+{% block title %}Register - Trivia Game{% endblock %}
+{% block content %}
+<div class="page-center">
+  <form method="post" action="/register">
+    <h1>Register</h1>
+
+    {% if error %}
+    <div class="error-message">{{ error|safe }}</div>
+    {% endif %}
+
+    <div class="input-group">
+      <input type="text" name="username" value="{{ username or '' }}" required placeholder=" " />
+      <label>Username</label>
+    </div>
+
+    <div class="input-group">
+      <input type="email" name="email" value="{{ email or '' }}" required placeholder=" " />
+      <label>Email</label>
+    </div>
+
+    <div class="input-group">
+      <input type="password" name="password" required placeholder=" " />
+      <label>Password</label>
+    </div>
+
+    <button type="submit">📝 Register</button>
+
+    <button type="button" class="btn-google" onclick="window.location.href='/login/google'">
+      <img src="https://www.gstatic.com/firebasejs/ui/2.0.0/images/auth/google.svg" alt="Google" />
+      Sign up with Google
+    </button>
+  </form>
+</div>
+{% endblock %}

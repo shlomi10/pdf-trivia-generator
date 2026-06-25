@@ -1,0 +1,46 @@
+<!-- templates/base.html -->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8"/>
+    <meta name="viewport" content="width=device-width, initial-scale=1"/>
+    <title>{% block title %}Trivia Game{% endblock %}</title>
+    <link rel="icon" href="/static/favicon.ico" type="image/x-icon"/>
+    <link rel="stylesheet" href="/static/style.css?v=5"/>
+</head>
+<body>
+
+<!-- Rolex Clock -->
+<div class="rolex-clock">
+  <iframe
+    src="https://static.rolex.com/retailers/clock/?colour=gold&apiKey=af0f4db817fa44cc09aef6cc9aefb51b&lang=de">
+  </iframe>
+</div>
+
+
+{% if username %}
+<h2 class="fade-in">Welcome, {{ username }} 👋</h2>
+{% endif %}
+
+<nav>
+    <a href="/">🏠 Home</a>
+    {% if username %}
+    <span style="margin-inline: 1rem;">👋 Hello {{ username }}</span>
+    <a href="/upload">📤 Upload</a>
+    <a href="/scores">📊 My Scores</a>
+    <a href="/logout">🚪 Logout</a>
+    {% else %}
+    <a href="/login">🔐 Login</a>
+    <a href="/register">📝 Register</a>
+    {% endif %}
+</nav>
+
+{% block content %}{% endblock %}
+
+{% if request.query_params.get("logout") %}
+<script>
+    alert("👋 You have been logged out.");
+</script>
+{% endif %}
+</body>
+</html>

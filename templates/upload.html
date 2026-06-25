@@ -1,0 +1,109 @@
+{% extends "base.html" %}
+
+{% block title %}Upload PDF - Trivia Game{% endblock %}
+
+{% block content %}
+<div class="container">
+  <h1 class="text-outline">📄 Upload a PDF to Generate Trivia</h1>
+  <p class="text-outline">Upload your own PDF or play with the built-in story. Your score will be saved to the score board.</p>
+
+  <div class="upload-option-card logged-in-card">
+    <div class="dual-options">
+      <div class="play-option framed-option">
+        <h3>Upload your PDF</h3>
+        <form id="upload-form" class="framed-form">
+          <input type="file" name="file" accept="application/pdf" required/>
+          <label class="field-label">Number of questions</label>
+          <select name="num_questions">
+            <option value="3" selected>3</option>
+            <option value="5">5</option>
+            <option value="10">10</option>
+          </select>
+          <button type="submit">Create a Trivia Game</button>
+        </form>
+      </div>
+
+      <div class="option-divider">or</div>
+
+      <div class="play-option framed-option">
+        <h3>Default story</h3>
+        <p class="story-title">Alice in Wonderland</p>
+        <p class="story-hebrew">עליסה בארץ הפלאות</p>
+        <form class="default-pdf-form framed-form" data-endpoint="/play-default-pdf">
+          <input type="hidden" name="pdf_id" value="alice_in_wonderland"/>
+          <label class="field-label">Number of questions</label>
+          <select name="num_questions">
+            <option value="3" selected>3</option>
+            <option value="5">5</option>
+            <option value="10">10</option>
+          </select>
+          <button type="submit">Play Alice in Wonderland</button>
+        </form>
+      </div>
+    </div>
+
+    <p id="status-msg" class="status-msg"></p>
+    <div id="spinner" class="spinner-wrap" style="display: none;">
+      <div class="loader"></div>
+    </div>
+  </div>
+</div>
+
+<script>
+  function submitForm(form, endpoint, statusId, spinnerId) {
+    const formData = new FormData(form);
+    const statusMsg = document.getElementById(statusId);
+    const spinner = document.getElementById(spinnerId);
+    const card = form.closest(".upload-option-card");
+    const allButtons = card.querySelectorAll("button");
+
+    allButtons.forEach((btn) => { btn.disabled = true; });
+    statusMsg.innerText = "⏳ Generating your trivia game...";
+    spinner.style.display = "block";
+
+    const xhr = new XMLHttpRequest();
+    xhr.onload = () => {
+      setTimeout(() => {
+        if (xhr.status === 200 && xhr.getResponseHeader("content-type").includes("text/html")) {
+          document.open();
+          document.write(xhr.responseText);
+          document.close();
+        } else {
+          try {
+            const error = JSON.parse(xhr.responseText);
+            alert(error.detail || "Request failed.");
+          } catch {
+            alert("Request failed.");
+          }
+          statusMsg.innerText = "";
+          spinner.style.display = "none";
+          allButtons.forEach((btn) => { btn.disabled = false; });
+        }
+      }, 300);
+    };
+
+    xhr.onerror = () => {
+      alert("Something went wrong.");
+      statusMsg.innerText = "";
+      spinner.style.display = "none";
+      allButtons.forEach((btn) => { btn.disabled = false; });
+    };
+
+    xhr.open("POST", endpoint, true);
+    xhr.withCredentials = true;
+    xhr.send(formData);
+  }
+
+  document.getElementById("upload-form").addEventListener("submit", (e) => {
+    e.preventDefault();
+    submitForm(e.target, "/upload-pdf", "status-msg", "spinner");
+  });
+
+  document.querySelectorAll(".default-pdf-form").forEach((form) => {
+    form.addEventListener("submit", (e) => {
+      e.preventDefault();
+      submitForm(form, form.dataset.endpoint, "status-msg", "spinner");
+    });
+  });
+</script>
+{% endblock %}
