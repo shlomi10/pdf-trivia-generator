@@ -1,4 +1,3 @@
-import math
 import openai
 import os
 import fitz
@@ -34,9 +33,27 @@ def chunk_text(s: str, chunk_size: int = 15000, overlap: int = 800):
             i = 0
     return chunks
 
-def _clean_and_validate(items):
+def _normalize_question_key(q: str) -> str:
+    q = q.strip().lower()
+    q = re.sub(r"[^\w\s]", "", q, flags=re.UNICODE)
+    return re.sub(r"\s+", " ", q).strip()
+
+
+def _is_metadata_question(q: str) -> bool:
+    return bool(re.search(
+        r"\b(author|writer|publisher|published|publication|isbn|copyright|"
+        r"table of contents|dedication|foreword|preface|page number|"
+        r"printed by|edition|press|bibliograph)\b|"
+        r"תוכן עניינים|מחבר|סופר|הוצאה|מהדורה|זכויות יוצרים",
+        q,
+        re.IGNORECASE,
+    ))
+
+
+def _clean_and_validate(items, seen=None):
+    if seen is None:
+        seen = set()
     out = []
-    seen = set()
     for it in items:
         if not isinstance(it, dict):
             continue
@@ -47,21 +64,60 @@ def _clean_and_validate(items):
             continue
         if ans not in opts:
             continue
-        key = q.strip().lower()
-        if key in seen:
+        if _is_metadata_question(q):
+            continue
+        key = _normalize_question_key(q)
+        if not key or key in seen:
+            continue
+        if any(
+            key[:40] == s[:40] or (len(key) > 20 and (key in s or s in key))
+            for s in seen
+        ):
             continue
         seen.add(key)
         out.append({"question": q.strip(), "options": [o.strip() for o in opts], "answer": ans.strip()})
     return out
 
-def _ask_gpt(text, k):
-    sys = "You are a careful generator that outputs only valid JSON arrays."
+
+def _select_text_parts(text: str, num_parts: int = 1) -> list[str]:
+    if len(text) < 12000:
+        return [text]
+    chunks = chunk_text(text, chunk_size=15000, overlap=800)
+    if len(chunks) <= num_parts:
+        return chunks
+    body_chunks = chunks[1:] if len(chunks) > 2 else chunks
+    return random.sample(body_chunks, min(num_parts, len(body_chunks)))
+
+
+def _ask_gpt(text, k, avoid_questions=None):
+    avoid_clause = ""
+    if avoid_questions:
+        listed = "\n".join(f"- {q}" for q in avoid_questions[:20])
+        avoid_clause = (
+            f"Do NOT repeat or closely paraphrase any of these existing questions:\n{listed}\n"
+        )
+    sys = (
+        "You generate trivia questions from any document type (book, article, report, resume, "
+        "lecture notes, etc.) and output only valid JSON arrays."
+    )
     usr = (
-        f"Create exactly {k} VERY EASY trivia questions strictly from the text. "
-        f"Use only obvious, basic facts from the provided text. No trick or hard questions. "
-        f"All four options must be short and distinct. The correct answer must be one of the options. "
-        f"Return ONLY a JSON array of objects with fields: question, options (exactly 4), answer. "
-        f"If you cannot find enough facts, return as many as you can, but never fabricate. "
+        f"Create exactly {k} trivia questions strictly from the text below.\n"
+        f"First infer what kind of document this is, then ask questions that are relevant to its "
+        f"actual subject matter and main information.\n"
+        f"Examples by document type:\n"
+        f"- Book or story: events, ideas, arguments, lessons, relationships between parts of the text.\n"
+        f"- Article or essay: claims, evidence, conclusions, key concepts.\n"
+        f"- Resume or CV: roles, skills, experience, education, projects, achievements.\n"
+        f"- Report or manual: procedures, findings, recommendations, definitions, facts.\n"
+        f"Use a mix of easy and moderate difficulty. Questions may require understanding, not only memorizing a single word.\n"
+        f"NEVER ask about document packaging or metadata, including: table of contents, chapter or section "
+        f"listings, page numbers, author or writer name, publisher, publication date, ISBN, copyright, "
+        f"dedications, preface credits, headers, footers, cover page details, or any bibliographic information.\n"
+        f"Each question must be clearly distinct from the others. Vary topics and angles.\n"
+        f"All four options must be short and distinct. The correct answer must be one of the options.\n"
+        f"Return ONLY a JSON array of objects with fields: question, options (exactly 4), answer.\n"
+        f"If you cannot find enough substantive content, return as many as you can, but never fabricate.\n"
+        f"{avoid_clause}"
         f"Text:\n{text}"
     )
     r = client.chat.completions.create(
@@ -85,17 +141,23 @@ def generate_trivia_from_pdf(file_bytes: bytes, num_questions: int = 3):
     text = extract_text_from_pdf(file_bytes)
     if not text or not text.strip():
         return []
-    if len(text) < 12000:
-        parts = [text]
-    else:
-        parts = chunk_text(text, chunk_size=15000, overlap=800)[:2]
-    per_part = max(1, math.ceil(num_questions / max(1, len(parts))))
+    num_parts = 1 if num_questions <= 5 else 2
+    parts = _select_text_parts(text, num_parts)
     all_items = []
+    seen_keys = set()
     for p in parts:
-        items = _ask_gpt(p, per_part)
-        all_items.extend(items)
-        if len(all_items) >= num_questions:
+        needed = num_questions - len(all_items)
+        if needed <= 0:
             break
-    all_items = _clean_and_validate(all_items)
+        request_k = needed + min(3, max(1, needed // 2))
+        items = _ask_gpt(
+            p,
+            request_k,
+            avoid_questions=[item["question"] for item in all_items],
+        )
+        for item in _clean_and_validate(items, seen_keys):
+            all_items.append(item)
+            if len(all_items) >= num_questions:
+                break
     random.shuffle(all_items)
     return all_items[:num_questions]
