@@ -121,11 +121,10 @@ def _ask_gpt(text, k, avoid_questions=None):
         f"Text:\n{text}"
     )
     r = client.chat.completions.create(
-        model="gpt-5",
+        model="gpt-4o-mini",
         messages=[{"role": "system", "content": sys}, {"role": "user", "content": usr}],
-        max_completion_tokens=2500,
-        top_p=1,
-        reasoning_effort="low"
+        max_tokens=2000,
+        temperature=0.7,
     )
     raw = r.choices[0].message.content
     try:
