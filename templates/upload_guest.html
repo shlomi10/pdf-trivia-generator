@@ -1,54 +1,50 @@
 {% extends "base.html" %}
 
-{% block title %}Play as Guest - Trivia Game{% endblock %}
+{% block title %}{{ t('guest.title') }}{% endblock %}
 
 {% block content %}
 <div class="container">
-  <h1 class="text-outline">🎮 Play Without Login</h1>
-  <p class="text-outline">
-    Upload a PDF or use the default one (Alice in Wonderland) stored in the system, and play trivia right away.
-  </p>
-  <p class="text-outline">
-    Your score will <strong>not</strong> be saved to the score board.
-  </p>
+  <h1 class="text-outline">🎮 {{ t('guest.heading') }}</h1>
+  <p class="text-outline">{{ t('guest.subtitle') }}</p>
+  <p class="text-outline">{{ t('guest.no_save') }}</p>
 
   <div class="upload-option-card guest-option">
     <div class="dual-options">
       <div class="play-option framed-option">
-        <h3>Upload your PDF</h3>
+        <h3>{{ t('upload.your_pdf') }}</h3>
         <form id="guest-upload-form" class="framed-form">
           <input type="file" name="file" accept="application/pdf" required/>
-          <label class="field-label">Number of questions</label>
+          <label class="field-label">{{ t('upload.num_questions') }}</label>
           <select name="num_questions">
             <option value="3" selected>3</option>
             <option value="5">5</option>
             <option value="10">10</option>
           </select>
-          <button type="submit">Play as Guest</button>
+          <button type="submit">{{ t('guest.play_guest') }}</button>
         </form>
       </div>
 
-      <div class="option-divider">or</div>
+      <div class="option-divider">{{ t('upload.or') }}</div>
 
       <div class="play-option framed-option">
-        <h3>Default story</h3>
+        <h3>{{ t('upload.default_story') }}</h3>
         <p class="story-title">Alice in Wonderland</p>
         <p class="story-hebrew">עליסה בארץ הפלאות</p>
         <form class="default-pdf-form framed-form" data-endpoint="/play-default-pdf-guest">
           <input type="hidden" name="pdf_id" value="alice_in_wonderland"/>
-          <label class="field-label">Number of questions</label>
+          <label class="field-label">{{ t('upload.num_questions') }}</label>
           <select name="num_questions">
             <option value="3" selected>3</option>
             <option value="5">5</option>
             <option value="10">10</option>
           </select>
-          <button type="submit">Play Alice in Wonderland</button>
+          <button type="submit">{{ t('upload.play_alice') }}</button>
         </form>
       </div>
     </div>
 
     <p style="margin-top: 1.5rem;">
-      <a href="/upload" class="option-link">← Back</a>
+      <a href="/upload" class="option-link">← {{ t('guest.back') }}</a>
     </p>
   </div>
 </div>
@@ -56,12 +52,13 @@
 <div id="loading-overlay" class="loading-overlay" hidden aria-live="polite" aria-busy="true">
   <div class="loading-panel">
     <div class="loader loader-lg"></div>
-    <p class="loading-title">Generating your trivia game...</p>
-    <p id="loading-step" class="loading-step">Reading your document...</p>
+    <p class="loading-title">{{ t('loading.title') }}</p>
+    <p id="loading-step" class="loading-step">{{ t('loading.step1') }}</p>
     <p id="loading-timer" class="loading-timer">0s</p>
-    <p class="loading-hint">This usually takes 10–30 seconds</p>
+    <p class="loading-hint">{{ t('loading.hint') }}</p>
   </div>
 </div>
 
-<script src="/static/upload_progress.js?v=1"></script>
+<script>window.UPLOAD_I18N = {{ i18n_js | tojson }};</script>
+<script src="/static/upload_progress.js?v=2"></script>
 {% endblock %}

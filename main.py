@@ -7,6 +7,7 @@ from db.models import User, ImageTrivia
 from services.aws_file_utils import upload_and_get_presigned_url
 from services.default_pdfs import get_default_pdf_bytes
 from services.trivia_generator import generate_trivia_from_pdf
+from services.i18n import get_lang, translate, js_strings
 from games.games import create_game, get_db
 from fastapi import FastAPI, Form, Depends, HTTPException
 from fastapi.responses import RedirectResponse
@@ -40,6 +41,20 @@ app.mount("/static", StaticFiles(directory="static"), name="static")
 
 # Revert to the simplest Jinja2Templates initialization
 templates = Jinja2Templates(directory="templates")
+
+
+def render_template(request: Request, name: str, context: dict = None, status_code: int = 200):
+    lang = get_lang(request)
+    ctx = {
+        "lang": lang,
+        "dir": "rtl" if lang == "he" else "ltr",
+        "t": lambda key, **kw: translate(key, lang, **kw),
+        "i18n_js": js_strings(lang),
+    }
+    if context:
+        ctx.update(context)
+    return templates.TemplateResponse(request, name, ctx, status_code=status_code)
+
 # Explicitly disable Jinja2's cache to work around the TypeError
 # This line is now removed as it didn't prevent the error and the issue is earlier in the call stack.
 # templates.env.cache = None
@@ -58,7 +73,7 @@ oauth.register(
 @app.get("/login/google", tags=["auth"], summary="Start Google OAuth")
 async def login_google(request: Request):
     if not os.getenv("GOOGLE_CLIENT_ID") or not os.getenv("GOOGLE_CLIENT_SECRET"):
-        return RedirectResponse(url="/login?error=Google+login+is+not+configured+on+this+server", status_code=302)
+        return RedirectResponse(url="/login?error=google_not_configured", status_code=302)
     redirect_uri = request.url_for("auth_google_callback")
     return await oauth.google.authorize_redirect(request, redirect_uri)
 
@@ -98,9 +113,9 @@ async def login(
     user = db.query(User).filter(User.username == username).first()
     if not user or not verify_password(password, user.hashed_password):
         # Render login page again with error
-        return templates.TemplateResponse(request, "login.html", { # Explicitly named arguments
+        return render_template(request, "login.html", {
             "username": "",
-            "error": "❌ Invalid username or password. Please try again."
+            "error_key": "login.error_invalid",
         }, status_code=401)
 
     token = create_access_token({"sub": user.username})
@@ -120,8 +135,8 @@ async def register(
 ):
     existing_user = db.query(User).filter(User.username == username).first()
     if existing_user:
-        return templates.TemplateResponse(request, "register.html", { # Explicitly named arguments
-            "error": "Username already exists.<br>Please choose another."
+        return render_template(request, "register.html", {
+            "error_key": "register.error_exists",
         })
 
     hashed_password = get_password_hash(password)
@@ -139,9 +154,10 @@ async def upload_pdf(
 ):
     file_bytes = await file.read()
     key, _ = upload_and_get_presigned_url(file_bytes, file.filename, file.content_type)
-    trivia = generate_trivia_from_pdf(file_bytes, num_questions=num_questions)
+    lang = get_lang(request)
+    trivia = generate_trivia_from_pdf(file_bytes, num_questions=num_questions, lang=lang)
     game = create_game(user_id=current_user.id, file_key=key, trivia=trivia)
-    return templates.TemplateResponse(request, "result.html", {
+    return render_template(request, "result.html", {
         "trivia": trivia,
         "game_id": game.id,
         "username": current_user.username,
@@ -156,8 +172,9 @@ async def upload_pdf_guest(
     num_questions: int = Form(3),
 ):
     file_bytes = await file.read()
-    trivia = generate_trivia_from_pdf(file_bytes, num_questions=num_questions)
-    return templates.TemplateResponse(request, "result.html", {
+    lang = get_lang(request)
+    trivia = generate_trivia_from_pdf(file_bytes, num_questions=num_questions, lang=lang)
+    return render_template(request, "result.html", {
         "trivia": trivia,
         "game_id": None,
         "username": None,
@@ -175,9 +192,10 @@ async def play_default_pdf(
     db: Session = Depends(get_db),
 ):
     file_bytes, key = get_default_pdf_bytes(pdf_id)
-    trivia = generate_trivia_from_pdf(file_bytes, num_questions=num_questions)
+    lang = get_lang(request)
+    trivia = generate_trivia_from_pdf(file_bytes, num_questions=num_questions, lang=lang)
     game = create_game(user_id=current_user.id, file_key=key, trivia=trivia, db=db)
-    return templates.TemplateResponse(request, "result.html", {
+    return render_template(request, "result.html", {
         "trivia": trivia,
         "game_id": game.id,
         "username": current_user.username,
@@ -192,8 +210,9 @@ async def play_default_pdf_guest(
     num_questions: int = Form(3),
 ):
     file_bytes, _ = get_default_pdf_bytes(pdf_id)
-    trivia = generate_trivia_from_pdf(file_bytes, num_questions=num_questions)
-    return templates.TemplateResponse(request, "result.html", {
+    lang = get_lang(request)
+    trivia = generate_trivia_from_pdf(file_bytes, num_questions=num_questions, lang=lang)
+    return render_template(request, "result.html", {
         "trivia": trivia,
         "game_id": None,
         "username": None,
@@ -215,10 +234,18 @@ def show_scores(request: Request, db: Session = Depends(get_db), current_user: U
     scores = db.query(ImageTrivia).filter(ImageTrivia.user_id == current_user.id).order_by(ImageTrivia.uploaded_at.desc()).all()
     for s in scores:
         s.display_name = s.file_key.split("_", 1)[-1]
-    return templates.TemplateResponse(request, "scores.html", { # Explicitly named arguments
+    return render_template(request, "scores.html", {
         "scores": scores,
         "username": current_user.username
     })
+
+
+@app.get("/set-language/{lang_code}", tags=["pages"], summary="Switch UI language")
+async def set_language(request: Request, lang_code: str):
+    if lang_code in ("en", "he"):
+        request.session["lang"] = lang_code
+    referer = request.headers.get("referer") or "/"
+    return RedirectResponse(url=referer, status_code=302)
 
 
 @app.get("/logout", tags=["auth"], summary="Log out")
@@ -230,33 +257,37 @@ def logout():
 
 @app.get("/", response_class=HTMLResponse, tags=["pages"], summary="Home page")
 def home(request: Request, db: Session = Depends(get_db), current_user: User = Depends(get_current_user_optional)):
-    return templates.TemplateResponse(request, "index.html", { # Explicitly named arguments
+    return render_template(request, "index.html", {
         "username": current_user.username if current_user else None
     })
 
 
 @app.get("/register", response_class=HTMLResponse, tags=["pages"], summary="Registration page")
 def register_page(request: Request, current_user=Depends(get_current_user_optional)):
-    return templates.TemplateResponse(request, "register.html", { # Explicitly named arguments
+    return render_template(request, "register.html", {
         "username": current_user.username if current_user else None
     })
 
 
 @app.get("/login", response_class=HTMLResponse, tags=["pages"], summary="Login page")
 async def login_form(request: Request, current_user=Depends(get_current_user_optional)):
-    return templates.TemplateResponse(request, "login.html", { # Explicitly named arguments
+    error_param = request.query_params.get("error")
+    error_key = None
+    if error_param == "google_not_configured":
+        error_key = "error.google_not_configured"
+    return render_template(request, "login.html", {
         "username": current_user.username if current_user else None,
-        "error": request.query_params.get("error")
+        "error_key": error_key,
     })
 
 
 @app.get("/upload", response_class=HTMLResponse, tags=["pages"], summary="Upload page or login/guest choice")
 def upload_page(request: Request, current_user=Depends(get_current_user_optional)):
     if current_user:
-        return templates.TemplateResponse(request, "upload.html", {
+        return render_template(request, "upload.html", {
             "username": current_user.username
         })
-    return templates.TemplateResponse(request, "upload_choose.html", {
+    return render_template(request, "upload_choose.html", {
         "username": None
     })
 
@@ -265,7 +296,7 @@ def upload_page(request: Request, current_user=Depends(get_current_user_optional
 def upload_guest_page(request: Request, current_user=Depends(get_current_user_optional)):
     if current_user:
         return RedirectResponse(url="/upload", status_code=302)
-    return templates.TemplateResponse(request, "upload_guest.html", {
+    return render_template(request, "upload_guest.html", {
         "username": None
     })
 

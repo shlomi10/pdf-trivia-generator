@@ -1,37 +1,39 @@
-<!-- templates/base.html -->
 <!DOCTYPE html>
-<html lang="en">
+<html lang="{{ lang }}" dir="{{ dir }}">
 <head>
     <meta charset="utf-8"/>
     <meta name="viewport" content="width=device-width, initial-scale=1"/>
-    <title>{% block title %}Trivia Game{% endblock %}</title>
+    <title>{% block title %}{{ t('app.name') }}{% endblock %}</title>
     <link rel="icon" href="/static/favicon.ico" type="image/x-icon"/>
-    <link rel="stylesheet" href="/static/style.css?v=6"/>
+    <link rel="stylesheet" href="/static/style.css?v=9"/>
 </head>
 <body>
 
-<!-- Rolex Clock -->
+<div class="lang-switcher">
+    <a href="/set-language/en" class="lang-btn{% if lang == 'en' %} active{% endif %}">EN</a>
+    <a href="/set-language/he" class="lang-btn{% if lang == 'he' %} active{% endif %}">עב'</a>
+</div>
+
 <div class="rolex-clock">
   <iframe
     src="https://static.rolex.com/retailers/clock/?colour=gold&apiKey=af0f4db817fa44cc09aef6cc9aefb51b&lang=de">
   </iframe>
 </div>
 
-
 {% if username %}
-<h2 class="fade-in">Welcome, {{ username }} 👋</h2>
+<h2 class="fade-in">{{ t('welcome.user', name=username) }} 👋</h2>
 {% endif %}
 
 <nav>
-    <a href="/">🏠 Home</a>
+    <a href="/">🏠 {{ t('nav.home') }}</a>
     {% if username %}
-    <span style="margin-inline: 1rem;">👋 Hello {{ username }}</span>
-    <a href="/upload">📤 Upload</a>
-    <a href="/scores">📊 My Scores</a>
-    <a href="/logout">🚪 Logout</a>
+    <span style="margin-inline: 1rem;">👋 {{ t('nav.hello', name=username) }}</span>
+    <a href="/upload">📤 {{ t('nav.upload') }}</a>
+    <a href="/scores">📊 {{ t('nav.scores') }}</a>
+    <a href="/logout">🚪 {{ t('nav.logout') }}</a>
     {% else %}
-    <a href="/login">🔐 Login</a>
-    <a href="/register">📝 Register</a>
+    <a href="/login">🔐 {{ t('nav.login') }}</a>
+    <a href="/register">📝 {{ t('nav.register') }}</a>
     {% endif %}
 </nav>
 
@@ -39,7 +41,7 @@
 
 {% if request.query_params.get("logout") %}
 <script>
-    alert("👋 You have been logged out.");
+    alert("👋 {{ t('logout.alert') }}");
 </script>
 {% endif %}
 </body>

@@ -1,11 +1,17 @@
-const LOADING_STEPS = [
-  "Reading your document...",
-  "Analyzing the content...",
-  "Creating trivia questions with AI...",
-  "Almost ready...",
-];
-
 let loadingInterval = null;
+
+function getUploadI18n() {
+  return window.UPLOAD_I18N || {
+    loading_steps: [
+      "Reading your document...",
+      "Analyzing the content...",
+      "Creating trivia questions with AI...",
+      "Almost ready...",
+    ],
+    error_request_failed: "Request failed.",
+    error_something_wrong: "Something went wrong.",
+  };
+}
 
 function showLoadingOverlay() {
   const overlay = document.getElementById("loading-overlay");
@@ -13,21 +19,23 @@ function showLoadingOverlay() {
   const timer = document.getElementById("loading-timer");
   if (!overlay) return;
 
+  const i18n = getUploadI18n();
+  const steps = i18n.loading_steps;
   const start = Date.now();
   let stepIndex = 0;
 
   overlay.hidden = false;
-  step.textContent = LOADING_STEPS[0];
+  step.textContent = steps[0];
   timer.textContent = "0s";
 
   if (loadingInterval) clearInterval(loadingInterval);
   loadingInterval = setInterval(() => {
     const elapsed = Math.floor((Date.now() - start) / 1000);
     timer.textContent = elapsed + "s";
-    const nextStep = Math.min(Math.floor(elapsed / 4), LOADING_STEPS.length - 1);
+    const nextStep = Math.min(Math.floor(elapsed / 4), steps.length - 1);
     if (nextStep !== stepIndex) {
       stepIndex = nextStep;
-      step.textContent = LOADING_STEPS[stepIndex];
+      step.textContent = steps[stepIndex];
     }
   }, 1000);
 }
@@ -42,6 +50,7 @@ function hideLoadingOverlay() {
 }
 
 function submitForm(form, endpoint) {
+  const i18n = getUploadI18n();
   const formData = new FormData(form);
   const card = form.closest(".upload-option-card");
   const allButtons = card.querySelectorAll("button");
@@ -60,9 +69,9 @@ function submitForm(form, endpoint) {
       } else {
         try {
           const error = JSON.parse(xhr.responseText);
-          alert(error.detail || "Request failed.");
+          alert(error.detail || i18n.error_request_failed);
         } catch {
-          alert("Request failed.");
+          alert(i18n.error_request_failed);
         }
         allButtons.forEach((btn) => { btn.disabled = false; });
       }
@@ -71,7 +80,7 @@ function submitForm(form, endpoint) {
 
   xhr.onerror = () => {
     hideLoadingOverlay();
-    alert("Something went wrong.");
+    alert(i18n.error_something_wrong);
     allButtons.forEach((btn) => { btn.disabled = false; });
   };
 

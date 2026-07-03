@@ -1,34 +1,34 @@
 {% extends "base.html" %}
-{% block title %}Register - Trivia Game{% endblock %}
+{% block title %}{{ t('register.title') }}{% endblock %}
 {% block content %}
 <div class="page-center">
   <form method="post" action="/register">
-    <h1>Register</h1>
+    <h1>{{ t('register.heading') }}</h1>
 
-    {% if error %}
-    <div class="error-message">{{ error|safe }}</div>
+    {% if error_key %}
+    <div class="error-message">{{ t(error_key)|safe }}</div>
     {% endif %}
 
     <div class="input-group">
       <input type="text" name="username" value="{{ username or '' }}" required placeholder=" " />
-      <label>Username</label>
+      <label>{{ t('register.username') }}</label>
     </div>
 
     <div class="input-group">
       <input type="email" name="email" value="{{ email or '' }}" required placeholder=" " />
-      <label>Email</label>
+      <label>{{ t('register.email') }}</label>
     </div>
 
     <div class="input-group">
       <input type="password" name="password" required placeholder=" " />
-      <label>Password</label>
+      <label>{{ t('register.password') }}</label>
     </div>
 
-    <button type="submit">📝 Register</button>
+    <button type="submit">📝 {{ t('register.submit') }}</button>
 
     <button type="button" class="btn-google" onclick="window.location.href='/login/google'">
       <img src="https://www.gstatic.com/firebasejs/ui/2.0.0/images/auth/google.svg" alt="Google" />
-      Sign up with Google
+      {{ t('register.google') }}
     </button>
   </form>
 </div>

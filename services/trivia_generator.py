@@ -89,13 +89,16 @@ def _select_text_parts(text: str, num_parts: int = 1) -> list[str]:
     return random.sample(body_chunks, min(num_parts, len(body_chunks)))
 
 
-def _ask_gpt(text, k, avoid_questions=None):
+def _ask_gpt(text, k, avoid_questions=None, lang="en"):
     avoid_clause = ""
     if avoid_questions:
         listed = "\n".join(f"- {q}" for q in avoid_questions[:20])
         avoid_clause = (
             f"Do NOT repeat or closely paraphrase any of these existing questions:\n{listed}\n"
         )
+    lang_clause = ""
+    if lang == "he":
+        lang_clause = "Write all questions and all four answer options in Hebrew.\n"
     sys = (
         "You generate trivia questions from any document type (book, article, report, resume, "
         "lecture notes, etc.) and output only valid JSON arrays."
@@ -117,6 +120,7 @@ def _ask_gpt(text, k, avoid_questions=None):
         f"All four options must be short and distinct. The correct answer must be one of the options.\n"
         f"Return ONLY a JSON array of objects with fields: question, options (exactly 4), answer.\n"
         f"If you cannot find enough substantive content, return as many as you can, but never fabricate.\n"
+        f"{lang_clause}"
         f"{avoid_clause}"
         f"Text:\n{text}"
     )
@@ -136,7 +140,7 @@ def _ask_gpt(text, k, avoid_questions=None):
         data = json.loads(m.group(0)) if m else []
     return _clean_and_validate(data if isinstance(data, list) else [])
 
-def generate_trivia_from_pdf(file_bytes: bytes, num_questions: int = 3):
+def generate_trivia_from_pdf(file_bytes: bytes, num_questions: int = 3, lang: str = "en"):
     text = extract_text_from_pdf(file_bytes)
     if not text or not text.strip():
         return []
@@ -153,6 +157,7 @@ def generate_trivia_from_pdf(file_bytes: bytes, num_questions: int = 3):
             p,
             request_k,
             avoid_questions=[item["question"] for item in all_items],
+            lang=lang,
         )
         for item in _clean_and_validate(items, seen_keys):
             all_items.append(item)

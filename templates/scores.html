@@ -1,19 +1,19 @@
 {% extends "base.html" %}
 
-{% block title %}My Scores - Trivia Game{% endblock %}
+{% block title %}{{ t('scores.title') }}{% endblock %}
 
 {% block content %}
 <div class="page-center">
   <div class="content-card content-card-wide">
-    <h1>📊 My Trivia Scores</h1>
+    <h1>📊 {{ t('scores.heading') }}</h1>
 
     <table style="width: 100%; border-collapse: collapse; margin-top: 1rem;">
       <thead>
         <tr>
-          <th style="text-align: center; padding: 0.5rem;">#</th>
-          <th style="text-align: center; padding: 0.5rem;">File</th>
-          <th style="text-align: center; padding: 0.5rem;">Score</th>
-          <th style="text-align: center; padding: 0.5rem;">Date</th>
+          <th style="text-align: center; padding: 0.5rem;">{{ t('scores.num') }}</th>
+          <th style="text-align: center; padding: 0.5rem;">{{ t('scores.file') }}</th>
+          <th style="text-align: center; padding: 0.5rem;">{{ t('scores.score') }}</th>
+          <th style="text-align: center; padding: 0.5rem;">{{ t('scores.date') }}</th>
         </tr>
       </thead>
       <tbody>
@@ -21,14 +21,14 @@
         <tr>
           <td style="text-align: center; padding: 0.5rem;">{{ loop.index }}</td>
           <td style="text-align: center; padding: 0.5rem;">{{ score.display_name }}</td>
-          <td style="text-align: center; padding: 0.5rem;">{{ score.score if score.score is not none else 'Not finished' }}</td>
+          <td style="text-align: center; padding: 0.5rem;">{{ score.score if score.score is not none else t('scores.not_finished') }}</td>
           <td style="text-align: center; padding: 0.5rem;">{{ score.uploaded_at.strftime("%Y-%m-%d %H:%M") }}</td>
         </tr>
         {% endfor %}
       </tbody>
     </table>
 
-    <a href="/" class="btn">🏠 Back to Home</a>
+    <a href="/" class="btn">🏠 {{ t('scores.back') }}</a>
   </div>
 </div>
 {% endblock %}

@@ -1,25 +1,23 @@
 {% extends "base.html" %}
 
-{% block title %}Start Playing - Trivia Game{% endblock %}
+{% block title %}{{ t('choose.title') }}{% endblock %}
 
 {% block content %}
 <div class="container">
-  <h1 class="text-outline">🎯 Ready to Play?</h1>
-  <p class="text-outline">Choose how you want to start</p>
+  <h1 class="text-outline">🎯 {{ t('choose.heading') }}</h1>
+  <p class="text-outline">{{ t('choose.subtitle') }}</p>
 
   <div class="upload-option-card choose-card">
     <div class="choose-option login-option">
-      <p class="choose-headline">
-        🔒 <a href="/login" class="option-link">Log in</a> or <a href="/register" class="option-link">register</a> to save your score on the score board.
-      </p>
+      <p class="choose-headline">{{ t('choose.login_line')|safe }}</p>
     </div>
 
     <div class="section-separator"></div>
 
     <div class="choose-option guest-option-block">
-      <p class="choose-subtitle">Don't want to log in?</p>
+      <p class="choose-subtitle">{{ t('choose.guest_subtitle') }}</p>
       <p class="guest-btn-wrap">
-        <button type="button" onclick="window.location.href='/upload/guest'">Continue as Guest →</button>
+        <button type="button" onclick="window.location.href='/upload/guest'">{{ t('choose.guest_btn') }} →</button>
       </p>
     </div>
   </div>

@@ -1,17 +1,17 @@
 {% extends "base.html" %}
 
-{% block title %}Trivia Result{% endblock %}
+{% block title %}{{ t('result.title') }}{% endblock %}
 
 {% block content %}
 <div id="page-wrap">
-    <h1>Your Trivia Game 🎯</h1>
+    <h1>{{ t('result.heading') }} 🎯</h1>
     {% if guest_mode %}
-    <p style="color: #ffeb3b; margin-bottom: 1rem;">🎮 Guest mode — your score will not be saved to the score board.</p>
+    <p style="color: #ffeb3b; margin-bottom: 1rem;">🎮 {{ t('result.guest_mode') }}</p>
     {% endif %}
     <div class="upload-option-card" style="max-width: 640px; margin-top: 1rem;">
         <div id="game">
         <div id="quiz">
-            <p id="live-score" class="score">Score: 0</p>
+            <p id="live-score" class="score">{{ t('result.score', score=0) }}</p>
             <p id="question-text"></p>
             <div id="options-container" class="options"></div>
             <p id="feedback"></p>
@@ -59,12 +59,17 @@
 </style>
 
 <script>
+    const I18N = {{ i18n_js | tojson }};
     const fullTrivia = {{ trivia | tojson | safe }};
     const gameId = {{ game_id | tojson }};
     const guestMode = {{ guest_mode | tojson }};
     const trivia = fullTrivia;
     let current = 0;
     let score = 0;
+
+    function fmt(template, vars) {
+        return template.replace(/\{(\w+)\}/g, (_, key) => vars[key] ?? "");
+    }
 
     function showQuestion() {
         document.getElementById("feedback").innerText = "";
@@ -78,10 +83,10 @@
             btn.onclick = () => {
                 const correct = opt === q.answer;
                 if (correct) {
-                    document.getElementById("feedback").innerText = "✅ Correct!";
+                    document.getElementById("feedback").innerText = "✅ " + I18N.result_correct;
                     score++;
                 } else {
-                    document.getElementById("feedback").innerText = "❌ Wrong! Correct answer: " + q.answer;
+                    document.getElementById("feedback").innerText = "❌ " + fmt(I18N.result_wrong, { answer: q.answer });
                 }
                 document.querySelectorAll("#options-container button").forEach(b => b.disabled = true);
                 updateLiveScore();
@@ -92,7 +97,7 @@
     }
 
     function updateLiveScore() {
-        document.getElementById("live-score").innerText = `Score: ${score}`;
+        document.getElementById("live-score").innerText = fmt(I18N.result_score, { score: score });
     }
 
     async function nextQuestion() {
@@ -104,16 +109,16 @@
                 await saveScore();
             }
             const guestNote = guestMode
-                ? `<p style="color: #ffeb3b; margin-top: 0.5rem;">Score not saved — <a href="/login" class="option-link">log in</a> to track results on the score board.</p>`
+                ? `<p style="color: #ffeb3b; margin-top: 0.5rem;">${I18N.result_guest_not_saved}</p>`
                 : "";
             const playAgainUrl = guestMode ? "/upload/guest" : "/upload";
             document.getElementById("game").innerHTML = `
-        <h2>🎉 Game Over!</h2>
-        <p class="score">Your score: ${score} / ${trivia.length}</p>
+        <h2>🎉 ${I18N.result_game_over}</h2>
+        <p class="score">${fmt(I18N.result_your_score, { score: score, total: trivia.length })}</p>
         ${guestNote}
         <div class="game-actions">
-          <a href="${playAgainUrl}" class="btn btn-block">🔁 Try another PDF</a>
-          <a href="/" class="btn btn-block">🏠 Back to Home</a>
+          <a href="${playAgainUrl}" class="btn btn-block">🔁 ${I18N.result_try_another}</a>
+          <a href="/" class="btn btn-block">🏠 ${I18N.result_back_home}</a>
         </div>
       `;
         }
@@ -133,8 +138,8 @@
         if (!Array.isArray(trivia) || trivia.length === 0) {
             const backUrl = guestMode ? "/upload/guest" : "/upload";
             document.getElementById("game").innerHTML = `
-        <p>No questions were generated. Try another PDF.</p>
-        <a href="${backUrl}" class="btn">Back</a>
+        <p>${I18N.result_no_questions}</p>
+        <a href="${backUrl}" class="btn">${I18N.result_back}</a>
       `;
             return;
         }
