@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1"/>
     <title>{% block title %}{{ t('app.name') }}{% endblock %}</title>
     <link rel="icon" href="/static/favicon.ico" type="image/x-icon"/>
-    <link rel="stylesheet" href="/static/style.css?v=9"/>
+    <link rel="stylesheet" href="/static/style.css?v=11"/>
 </head>
 <body>
 
@@ -26,6 +26,7 @@
 
 <nav>
     <a href="/">🏠 {{ t('nav.home') }}</a>
+    <a href="/about">ℹ️ {{ t('nav.about') }}</a>
     {% if username %}
     <span style="margin-inline: 1rem;">👋 {{ t('nav.hello', name=username) }}</span>
     <a href="/upload">📤 {{ t('nav.upload') }}</a>

@@ -1,0 +1,18 @@
+{% extends "base.html" %}
+
+{% block title %}{{ t('about.title') }}{% endblock %}
+
+{% block content %}
+<div class="page-center">
+  <div class="content-card content-card-wide about-card">
+    <h1 class="text-outline">ℹ️ {{ t('about.heading') }}</h1>
+    <p class="about-developer">{{ t('about.developed_by') }}</p>
+    <div class="about-text">
+      <p>{{ t('about.p1') }}</p>
+      <p>{{ t('about.p2') }}</p>
+      <p>{{ t('about.p3') }}</p>
+    </div>
+    <a href="/" class="btn">🏠 {{ t('about.back') }}</a>
+  </div>
+</div>
+{% endblock %}

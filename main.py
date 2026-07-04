@@ -255,6 +255,13 @@ def logout():
     return response
 
 
+@app.get("/about", response_class=HTMLResponse, tags=["pages"], summary="About page")
+def about_page(request: Request, current_user=Depends(get_current_user_optional)):
+    return render_template(request, "about.html", {
+        "username": current_user.username if current_user else None
+    })
+
+
 @app.get("/", response_class=HTMLResponse, tags=["pages"], summary="Home page")
 def home(request: Request, db: Session = Depends(get_db), current_user: User = Depends(get_current_user_optional)):
     return render_template(request, "index.html", {
