@@ -5,12 +5,18 @@ from fastapi.security import OAuth2PasswordBearer
 from sqlalchemy.orm import Session
 from fastapi import Cookie
 from typing import Optional
+import os
+from dotenv import load_dotenv
 
 from db.db import SessionLocal
 from db.models import User
 from datetime import datetime, timedelta, timezone
 
-SECRET_KEY = "super-secret-key"
+load_dotenv(override=True)
+
+SECRET_KEY = os.getenv("JWT_SECRET_KEY")
+if not SECRET_KEY:
+    raise RuntimeError("JWT_SECRET_KEY is not set in environment")
 ALGORITHM = "HS256"
 ACCESS_TOKEN_EXPIRE_MINUTES = 60
 
