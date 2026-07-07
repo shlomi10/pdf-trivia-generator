@@ -35,6 +35,11 @@ MAX_NUM_QUESTIONS = 50
 MAX_PDF_BYTES = 10 * 1024 * 1024
 ALLOWED_DIFFICULTIES = {"easy", "medium", "hard", "progressive"}
 SCORES_PAGE_SIZE = 25
+USERNAME_MIN = 3
+USERNAME_MAX = 30
+EMAIL_MAX = 254
+PASSWORD_MIN = 6
+PASSWORD_MAX = 72
 
 
 def clamp_num_questions(value: int) -> int:
@@ -272,17 +277,41 @@ async def register(
     password: str = Form(...),
     db: Session = Depends(get_db)
 ):
+    username = username.strip()
+    email = email.strip()
+
+    if not (USERNAME_MIN <= len(username) <= USERNAME_MAX):
+        return render_template(request, "register.html", {
+            "error_key": "register.error_username_length",
+            "username": username,
+            "email": email,
+        })
+    if len(email) > EMAIL_MAX:
+        return render_template(request, "register.html", {
+            "error_key": "register.error_email_length",
+            "username": username,
+            "email": email,
+        })
+    if not (PASSWORD_MIN <= len(password) <= PASSWORD_MAX):
+        return render_template(request, "register.html", {
+            "error_key": "register.error_password_length",
+            "username": username,
+            "email": email,
+        })
+
     existing_user = db.query(User).filter(User.username == username).first()
     if existing_user:
         return render_template(request, "register.html", {
             "error_key": "register.error_exists",
+            "username": username,
+            "email": email,
         })
 
     hashed_password = get_password_hash(password)
     new_user = User(username=username, email=email, hashed_password=hashed_password)
     db.add(new_user)
     db.commit()
-    return RedirectResponse(url="/login", status_code=302)
+    return RedirectResponse(url="/login?registered=1", status_code=302)
 
 @app.post("/upload-pdf", response_class=HTMLResponse, tags=["upload"], summary="Upload PDF and generate trivia (logged in)")
 @limiter.limit("10/minute;60/hour")
@@ -522,9 +551,13 @@ async def login_form(request: Request, current_user=Depends(get_current_user_opt
     error_key = None
     if error_param == "google_not_configured":
         error_key = "error.google_not_configured"
+    success_key = None
+    if request.query_params.get("registered") == "1":
+        success_key = "login.registered"
     return render_template(request, "login.html", {
         "username": current_user.username if current_user else None,
         "error_key": error_key,
+        "success_key": success_key,
     })
 
 

@@ -4,15 +4,18 @@
 <div class="page-center">
     <form action="/login" method="post">
         <h1>{{ t('login.heading') }}</h1>
+        {% if success_key %}
+        <div class="success-message">{{ t(success_key) }}</div>
+        {% endif %}
         {% if error_key %}
         <p style="color: #f87171; margin-bottom: 1rem;">{{ t(error_key) }}</p>
         {% endif %}
         <div class="input-group">
-            <input type="text" name="username" required placeholder=" " />
+            <input type="text" name="username" required placeholder=" " autocomplete="username" />
             <label>{{ t('login.username') }}</label>
         </div>
         <div class="input-group">
-            <input type="password" name="password" required placeholder=" " />
+            <input type="password" name="password" required placeholder=" " autocomplete="current-password" />
             <label>{{ t('login.password') }}</label>
         </div>
 
