@@ -11,7 +11,7 @@ from services.i18n import get_lang, translate, js_strings
 from games.games import create_game, get_db
 from fastapi import FastAPI, Form, Depends, HTTPException
 from fastapi.responses import RedirectResponse
-from sqlalchemy.orm import Session
+from sqlalchemy.orm import Session, load_only
 from auth.auth import get_password_hash, verify_password, create_access_token
 from fastapi.templating import Jinja2Templates
 from fastapi.responses import FileResponse
@@ -34,6 +34,7 @@ load_dotenv() # Load environment variables from .env file
 MAX_NUM_QUESTIONS = 50
 MAX_PDF_BYTES = 10 * 1024 * 1024
 ALLOWED_DIFFICULTIES = {"easy", "medium", "hard", "progressive"}
+SCORES_PAGE_SIZE = 25
 
 
 def clamp_num_questions(value: int) -> int:
@@ -445,13 +446,37 @@ async def trivia_status(job_id: str):
         return result
 
 @app.get("/scores", response_class=HTMLResponse, tags=["scores"], summary="View score board")
-def show_scores(request: Request, db: Session = Depends(get_db), current_user: User = Depends(get_current_user)):
-    scores = db.query(ImageTrivia).filter(ImageTrivia.user_id == current_user.id).order_by(ImageTrivia.uploaded_at.desc()).all()
+def show_scores(request: Request, page: int = 1, db: Session = Depends(get_db), current_user: User = Depends(get_current_user)):
+    if page < 1:
+        page = 1
+    base = db.query(ImageTrivia).filter(ImageTrivia.user_id == current_user.id)
+    total = base.count()
+    total_pages = max(1, (total + SCORES_PAGE_SIZE - 1) // SCORES_PAGE_SIZE)
+    if page > total_pages:
+        page = total_pages
+    scores = (
+        base.options(
+            load_only(
+                ImageTrivia.id,
+                ImageTrivia.file_key,
+                ImageTrivia.score,
+                ImageTrivia.uploaded_at,
+            )
+        )
+        .order_by(ImageTrivia.uploaded_at.desc())
+        .offset((page - 1) * SCORES_PAGE_SIZE)
+        .limit(SCORES_PAGE_SIZE)
+        .all()
+    )
     for s in scores:
         s.display_name = s.file_key.split("_", 1)[-1]
     return render_template(request, "scores.html", {
         "scores": scores,
-        "username": current_user.username
+        "username": current_user.username,
+        "page": page,
+        "total_pages": total_pages,
+        "total": total,
+        "start_index": (page - 1) * SCORES_PAGE_SIZE,
     })
 
 

@@ -19,7 +19,7 @@
       <tbody>
         {% for score in scores %}
         <tr>
-          <td style="text-align: center; padding: 0.5rem;">{{ loop.index }}</td>
+          <td style="text-align: center; padding: 0.5rem;">{{ start_index + loop.index }}</td>
           <td style="text-align: center; padding: 0.5rem;">{{ score.display_name }}</td>
           <td style="text-align: center; padding: 0.5rem;">{{ score.score if score.score is not none else t('scores.not_finished') }}</td>
           <td style="text-align: center; padding: 0.5rem;">
@@ -29,6 +29,24 @@
         {% endfor %}
       </tbody>
     </table>
+
+    {% if total_pages > 1 %}
+    <div class="pagination">
+      {% if page > 1 %}
+      <a href="/scores?page={{ page - 1 }}" class="page-link">{% if lang == 'he' %}{{ t('scores.prev') }} →{% else %}← {{ t('scores.prev') }}{% endif %}</a>
+      {% else %}
+      <span class="page-link disabled">{% if lang == 'he' %}{{ t('scores.prev') }} →{% else %}← {{ t('scores.prev') }}{% endif %}</span>
+      {% endif %}
+
+      <span class="page-info">{{ t('scores.page_of', page=page, total=total_pages) }}</span>
+
+      {% if page < total_pages %}
+      <a href="/scores?page={{ page + 1 }}" class="page-link">{% if lang == 'he' %}← {{ t('scores.next') }}{% else %}{{ t('scores.next') }} →{% endif %}</a>
+      {% else %}
+      <span class="page-link disabled">{% if lang == 'he' %}← {{ t('scores.next') }}{% else %}{{ t('scores.next') }} →{% endif %}</span>
+      {% endif %}
+    </div>
+    {% endif %}
 
     <a href="/" class="btn">🏠 {{ t('scores.back') }}</a>
   </div>
