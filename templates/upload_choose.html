@@ -17,7 +17,7 @@
     <div class="choose-option guest-option-block">
       <p class="choose-subtitle">{{ t('choose.guest_subtitle') }}</p>
       <p class="guest-btn-wrap">
-        <button type="button" onclick="window.location.href='/upload/guest'">{{ t('choose.guest_btn') }} →</button>
+        <button type="button" onclick="window.location.href='/upload/guest'">{{ t('choose.guest_btn') }} {% if lang == 'he' %}←{% else %}→{% endif %}</button>
       </p>
     </div>
   </div>

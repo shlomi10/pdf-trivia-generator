@@ -44,7 +44,7 @@
     </div>
 
     <p style="margin-top: 1.5rem;">
-      <a href="/upload" class="option-link">← {{ t('guest.back') }}</a>
+      <a href="/upload" class="option-link">{% if lang == 'he' %}{{ t('guest.back') }} →{% else %}← {{ t('guest.back') }}{% endif %}</a>
     </p>
   </div>
 </div>
