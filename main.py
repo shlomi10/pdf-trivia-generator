@@ -21,9 +21,38 @@ import os
 from starlette.middleware.sessions import SessionMiddleware
 from authlib.integrations.starlette_client import OAuth
 from dotenv import load_dotenv
+from slowapi import Limiter
+from slowapi.util import get_remote_address
+from slowapi.errors import RateLimitExceeded
 # Removed jinja2 Environment imports and custom class
 
 load_dotenv() # Load environment variables from .env file
+
+MAX_NUM_QUESTIONS = 10
+MAX_PDF_BYTES = 10 * 1024 * 1024
+
+
+def clamp_num_questions(value: int) -> int:
+    return max(1, min(value, MAX_NUM_QUESTIONS))
+
+
+def public_trivia(trivia):
+    return [
+        {"question": q.get("question"), "options": q.get("options", [])}
+        for q in (trivia or [])
+    ]
+
+
+async def read_pdf_within_limit(request: Request, file: UploadFile) -> bytes:
+    if file.size is not None and file.size > MAX_PDF_BYTES:
+        raise HTTPException(status_code=413, detail=translate("error.file_too_large", get_lang(request)))
+    file_bytes = await file.read()
+    if len(file_bytes) > MAX_PDF_BYTES:
+        raise HTTPException(status_code=413, detail=translate("error.file_too_large", get_lang(request)))
+    return file_bytes
+
+
+limiter = Limiter(key_func=get_remote_address)
 
 app = FastAPI(
     title="PDF Trivia Generator",
@@ -37,6 +66,18 @@ app = FastAPI(
         {"name": "scores", "description": "Game scores"},
     ],
 )
+app.state.limiter = limiter
+
+
+@app.exception_handler(RateLimitExceeded)
+async def rate_limit_handler(request: Request, exc: RateLimitExceeded):
+    from fastapi.responses import JSONResponse
+    return JSONResponse(
+        status_code=429,
+        content={"detail": translate("error.rate_limited", get_lang(request))},
+    )
+
+
 app.mount("/static", StaticFiles(directory="static"), name="static")
 
 # Revert to the simplest Jinja2Templates initialization
@@ -58,6 +99,31 @@ def render_template(request: Request, name: str, context: dict = None, status_co
 # Explicitly disable Jinja2's cache to work around the TypeError
 # This line is now removed as it didn't prevent the error and the issue is earlier in the call stack.
 # templates.env.cache = None
+
+CONTENT_SECURITY_POLICY = (
+    "default-src 'self'; "
+    "script-src 'self' 'unsafe-inline'; "
+    "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; "
+    "font-src 'self' https://fonts.gstatic.com; "
+    "img-src 'self' data: https://www.gstatic.com https://static.rolex.com; "
+    "frame-src https://static.rolex.com; "
+    "connect-src 'self'; "
+    "frame-ancestors 'self'; "
+    "base-uri 'self'; "
+    "form-action 'self'"
+)
+
+
+@app.middleware("http")
+async def add_security_headers(request: Request, call_next):
+    response = await call_next(request)
+    response.headers["Content-Security-Policy"] = CONTENT_SECURITY_POLICY
+    response.headers["X-Content-Type-Options"] = "nosniff"
+    response.headers["X-Frame-Options"] = "SAMEORIGIN"
+    response.headers["Referrer-Policy"] = "strict-origin-when-cross-origin"
+    response.headers["Strict-Transport-Security"] = "max-age=31536000; includeSubDomains"
+    return response
+
 
 app.add_middleware(SessionMiddleware, secret_key=os.getenv("SESSION_SECRET"))
 
@@ -104,6 +170,7 @@ async def auth_google_callback(request: Request, db: Session = Depends(get_db)):
 
 
 @app.post("/login", response_class=HTMLResponse, tags=["auth"], summary="Login with username and password")
+@limiter.limit("10/minute")
 async def login(
     request: Request,
     username: str = Form(...),
@@ -126,6 +193,7 @@ async def login(
 
 
 @app.post("/register", tags=["auth"], summary="Register a new user")
+@limiter.limit("5/minute")
 async def register(
     request: Request,
     username: str = Form(...),
@@ -146,34 +214,39 @@ async def register(
     return RedirectResponse(url="/login", status_code=302)
 
 @app.post("/upload-pdf", response_class=HTMLResponse, tags=["upload"], summary="Upload PDF and generate trivia (logged in)")
+@limiter.limit("10/minute;60/hour")
 async def upload_pdf(
     request: Request,
     file: UploadFile = File(...),
     num_questions: int = Form(3),
     current_user: User = Depends(get_current_user)
 ):
-    file_bytes = await file.read()
+    file_bytes = await read_pdf_within_limit(request, file)
     key, _ = upload_and_get_presigned_url(file_bytes, file.filename, file.content_type)
     lang = get_lang(request)
-    trivia = generate_trivia_from_pdf(file_bytes, num_questions=num_questions, lang=lang)
-    game = create_game(user_id=current_user.id, file_key=key, trivia=trivia)
+    trivia = generate_trivia_from_pdf(file_bytes, num_questions=clamp_num_questions(num_questions), lang=lang)
+    game_id = None
+    if trivia:
+        game = create_game(user_id=current_user.id, file_key=key, trivia=trivia)
+        game_id = game.id
     return render_template(request, "result.html", {
-        "trivia": trivia,
-        "game_id": game.id,
+        "trivia": public_trivia(trivia),
+        "game_id": game_id,
         "username": current_user.username,
         "guest_mode": False
     })
 
 
 @app.post("/upload-pdf-guest", response_class=HTMLResponse, tags=["guest"], summary="Upload PDF and play as guest")
+@limiter.limit("10/minute;60/hour")
 async def upload_pdf_guest(
     request: Request,
     file: UploadFile = File(...),
     num_questions: int = Form(3),
 ):
-    file_bytes = await file.read()
+    file_bytes = await read_pdf_within_limit(request, file)
     lang = get_lang(request)
-    trivia = generate_trivia_from_pdf(file_bytes, num_questions=num_questions, lang=lang)
+    trivia = generate_trivia_from_pdf(file_bytes, num_questions=clamp_num_questions(num_questions), lang=lang)
     return render_template(request, "result.html", {
         "trivia": trivia,
         "game_id": None,
@@ -184,6 +257,7 @@ async def upload_pdf_guest(
 
 
 @app.post("/play-default-pdf", response_class=HTMLResponse, tags=["upload"], summary="Play default PDF trivia (logged in)")
+@limiter.limit("10/minute;60/hour")
 async def play_default_pdf(
     request: Request,
     pdf_id: str = Form("alice_in_wonderland"),
@@ -193,17 +267,21 @@ async def play_default_pdf(
 ):
     file_bytes, key = get_default_pdf_bytes(pdf_id)
     lang = get_lang(request)
-    trivia = generate_trivia_from_pdf(file_bytes, num_questions=num_questions, lang=lang)
-    game = create_game(user_id=current_user.id, file_key=key, trivia=trivia, db=db)
+    trivia = generate_trivia_from_pdf(file_bytes, num_questions=clamp_num_questions(num_questions), lang=lang)
+    game_id = None
+    if trivia:
+        game = create_game(user_id=current_user.id, file_key=key, trivia=trivia, db=db)
+        game_id = game.id
     return render_template(request, "result.html", {
-        "trivia": trivia,
-        "game_id": game.id,
+        "trivia": public_trivia(trivia),
+        "game_id": game_id,
         "username": current_user.username,
         "guest_mode": False
     })
 
 
 @app.post("/play-default-pdf-guest", response_class=HTMLResponse, tags=["guest"], summary="Play default PDF trivia as guest")
+@limiter.limit("10/minute;60/hour")
 async def play_default_pdf_guest(
     request: Request,
     pdf_id: str = Form("alice_in_wonderland"),
@@ -211,7 +289,7 @@ async def play_default_pdf_guest(
 ):
     file_bytes, _ = get_default_pdf_bytes(pdf_id)
     lang = get_lang(request)
-    trivia = generate_trivia_from_pdf(file_bytes, num_questions=num_questions, lang=lang)
+    trivia = generate_trivia_from_pdf(file_bytes, num_questions=clamp_num_questions(num_questions), lang=lang)
     return render_template(request, "result.html", {
         "trivia": trivia,
         "game_id": None,
@@ -220,14 +298,50 @@ async def play_default_pdf_guest(
     })
 
 
-@app.post("/save-score", tags=["scores"], summary="Save game score")
-async def save_score(game_id: int = Form(...), score: int = Form(...), db: Session = Depends(get_db)):
+@app.post("/answer-question", tags=["scores"], summary="Submit a single answer; score is computed server-side")
+@limiter.limit("120/minute")
+async def answer_question(
+    request: Request,
+    game_id: int = Form(...),
+    question_index: int = Form(...),
+    choice: str = Form(...),
+    current_user: User = Depends(get_current_user),
+    db: Session = Depends(get_db),
+):
     game = db.query(ImageTrivia).filter(ImageTrivia.id == game_id).first()
-    if game:
-        game.score = score
+    if not game or game.user_id != current_user.id:
+        raise HTTPException(status_code=404, detail="Game not found")
+
+    trivia = game.trivia or []
+    if question_index < 0 or question_index >= len(trivia):
+        raise HTTPException(status_code=400, detail="Invalid question index")
+
+    progress = request.session.get("game_progress", {})
+    key = str(game_id)
+    state = progress.get(key, {"answered": [], "score": 0})
+
+    correct_answer = trivia[question_index].get("answer")
+    is_correct = choice == correct_answer
+
+    if question_index not in state["answered"]:
+        state["answered"].append(question_index)
+        if is_correct:
+            state["score"] += 1
+        progress[key] = state
+        request.session["game_progress"] = progress
+
+    finished = len(state["answered"]) >= len(trivia)
+    if finished:
+        game.score = state["score"]
         db.commit()
-        return {"message": "Score saved!"}
-    raise HTTPException(status_code=404, detail="Game not found")
+
+    return {
+        "correct": is_correct,
+        "answer": correct_answer,
+        "score": state["score"],
+        "total": len(trivia),
+        "finished": finished,
+    }
 
 @app.get("/scores", response_class=HTMLResponse, tags=["scores"], summary="View score board")
 def show_scores(request: Request, db: Session = Depends(get_db), current_user: User = Depends(get_current_user)):

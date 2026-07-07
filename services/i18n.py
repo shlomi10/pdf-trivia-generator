@@ -93,6 +93,8 @@ STRINGS = {
         "error.request_failed": "Request failed.",
         "error.something_wrong": "Something went wrong.",
         "error.google_not_configured": "Google login is not configured on this server.",
+        "error.file_too_large": "File is too large. Maximum size is 10 MB.",
+        "error.rate_limited": "Too many requests. Please wait a moment and try again.",
     },
     "he": {
         "app.name": "משחק טריוויה",
@@ -186,6 +188,8 @@ STRINGS = {
         "error.request_failed": "הבקשה נכשלה.",
         "error.something_wrong": "משהו השתבש.",
         "error.google_not_configured": "התחברות Google לא מוגדרת בשרת זה.",
+        "error.file_too_large": "הקובץ גדול מדי. הגודל המרבי הוא 10 MB.",
+        "error.rate_limited": "יותר מדי בקשות. המתינו רגע ונסו שוב.",
     },
 }
 

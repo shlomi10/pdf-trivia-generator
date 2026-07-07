@@ -80,20 +80,44 @@
         q.options.forEach(opt => {
             const btn = document.createElement("button");
             btn.textContent = opt;
-            btn.onclick = () => {
-                const correct = opt === q.answer;
-                if (correct) {
-                    document.getElementById("feedback").innerText = "✅ " + I18N.result_correct;
-                    score++;
-                } else {
-                    document.getElementById("feedback").innerText = "❌ " + fmt(I18N.result_wrong, { answer: q.answer });
-                }
-                document.querySelectorAll("#options-container button").forEach(b => b.disabled = true);
-                updateLiveScore();
-                setTimeout(nextQuestion, 1200);
-            };
+            btn.onclick = () => handleAnswer(opt);
             optionsDiv.appendChild(btn);
         });
+    }
+
+    function showFeedback(isCorrect, correctAnswer) {
+        if (isCorrect) {
+            document.getElementById("feedback").innerText = "✅ " + I18N.result_correct;
+        } else {
+            document.getElementById("feedback").innerText = "❌ " + fmt(I18N.result_wrong, { answer: correctAnswer });
+        }
+        document.querySelectorAll("#options-container button").forEach(b => b.disabled = true);
+        updateLiveScore();
+        setTimeout(nextQuestion, 1200);
+    }
+
+    async function handleAnswer(opt) {
+        document.querySelectorAll("#options-container button").forEach(b => b.disabled = true);
+        if (guestMode) {
+            const q = trivia[current];
+            const isCorrect = opt === q.answer;
+            if (isCorrect) score++;
+            showFeedback(isCorrect, q.answer);
+            return;
+        }
+        try {
+            const formData = new FormData();
+            formData.append("game_id", gameId);
+            formData.append("question_index", current);
+            formData.append("choice", opt);
+            const res = await fetch("/answer-question", { method: "POST", body: formData, credentials: "include" });
+            const data = await res.json();
+            score = data.score;
+            showFeedback(data.correct, data.answer);
+        } catch (err) {
+            document.querySelectorAll("#options-container button").forEach(b => b.disabled = false);
+            alert(I18N.error_request_failed || "Request failed.");
+        }
     }
 
     function updateLiveScore() {
@@ -105,9 +129,6 @@
         if (current < trivia.length) {
             showQuestion();
         } else {
-            if (!guestMode) {
-                await saveScore();
-            }
             const guestNote = guestMode
                 ? `<p style="color: #ffeb3b; margin-top: 0.5rem;">${I18N.result_guest_not_saved}</p>`
                 : "";
@@ -122,16 +143,6 @@
         </div>
       `;
         }
-    }
-
-    async function saveScore() {
-        if (!gameId) return;
-        try {
-            const formData = new FormData();
-            formData.append("game_id", gameId);
-            formData.append("score", score);
-            await fetch("/save-score", { method: "POST", body: formData, credentials: "include" });
-        } catch (err) {}
     }
 
     document.addEventListener("DOMContentLoaded", () => {

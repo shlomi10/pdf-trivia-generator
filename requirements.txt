@@ -33,3 +33,6 @@ boto3
 # 🔑 OAuth & Sessions
 itsdangerous
 authlib
+
+# 🚦 Rate Limiting
+slowapi
