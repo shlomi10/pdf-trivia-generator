@@ -22,7 +22,9 @@
           <td style="text-align: center; padding: 0.5rem;">{{ loop.index }}</td>
           <td style="text-align: center; padding: 0.5rem;">{{ score.display_name }}</td>
           <td style="text-align: center; padding: 0.5rem;">{{ score.score if score.score is not none else t('scores.not_finished') }}</td>
-          <td style="text-align: center; padding: 0.5rem;">{{ score.uploaded_at.strftime("%Y-%m-%d %H:%M") }}</td>
+          <td style="text-align: center; padding: 0.5rem;">
+            <span class="local-time" data-utc="{{ score.uploaded_at.strftime('%Y-%m-%dT%H:%M:%SZ') }}">{{ score.uploaded_at.strftime("%Y-%m-%d %H:%M") }}</span>
+          </td>
         </tr>
         {% endfor %}
       </tbody>
@@ -31,4 +33,18 @@
     <a href="/" class="btn">🏠 {{ t('scores.back') }}</a>
   </div>
 </div>
+
+<script>
+  document.querySelectorAll(".local-time").forEach((el) => {
+    const utc = el.dataset.utc;
+    if (!utc) return;
+    const date = new Date(utc);
+    if (isNaN(date.getTime())) return;
+    const pad = (n) => String(n).padStart(2, "0");
+    const formatted =
+      date.getFullYear() + "-" + pad(date.getMonth() + 1) + "-" + pad(date.getDate()) +
+      " " + pad(date.getHours()) + ":" + pad(date.getMinutes());
+    el.textContent = formatted;
+  });
+</script>
 {% endblock %}
