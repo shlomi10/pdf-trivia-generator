@@ -15,6 +15,7 @@
             <p id="question-text"></p>
             <div id="options-container" class="options"></div>
             <p id="feedback"></p>
+            <p id="explanation"></p>
         </div>
         </div>
     </div>
@@ -55,17 +56,35 @@
         margin-top: 0.2rem;
         width: 100%;
     }
+    #explanation {
+        background-color: #111827;
+        color: #d1d5db;
+        border-inline-start: 4px solid #6366f1;
+        padding: 0.6rem 0.9rem;
+        border-radius: 8px;
+        max-width: 600px;
+        width: 100%;
+        text-align: start;
+        font-size: 0.95rem;
+        line-height: 1.4;
+        margin: 0;
+        display: none;
+    }
 
 </style>
 
 <script>
     const I18N = {{ i18n_js | tojson }};
-    const fullTrivia = {{ trivia | tojson | safe }};
+    let trivia = {{ trivia | tojson | safe }};
     const gameId = {{ game_id | tojson }};
     const guestMode = {{ guest_mode | tojson }};
-    const trivia = fullTrivia;
+    const jobId = {{ job_id | tojson }};
+    const total = {{ total | tojson }};
     let current = 0;
     let score = 0;
+    let done = trivia.length >= total;
+    let waiting = false;
+    let pollTimer = null;
 
     function fmt(template, vars) {
         return template.replace(/\{(\w+)\}/g, (_, key) => vars[key] ?? "");
@@ -73,6 +92,9 @@
 
     function showQuestion() {
         document.getElementById("feedback").innerText = "";
+        const expEl = document.getElementById("explanation");
+        expEl.innerText = "";
+        expEl.style.display = "none";
         const q = trivia[current];
         document.getElementById("question-text").innerText = q.question;
         const optionsDiv = document.getElementById("options-container");
@@ -85,15 +107,27 @@
         });
     }
 
-    function showFeedback(isCorrect, correctAnswer) {
+    const FEEDBACK_DELAY_CORRECT = 2000;
+    const FEEDBACK_DELAY_WRONG = 2500;
+    const EXPLANATION_EXTRA_DELAY_CORRECT = 2000;
+    const EXPLANATION_EXTRA_DELAY_WRONG = 1200;
+
+    function showFeedback(isCorrect, correctAnswer, explanation) {
         if (isCorrect) {
             document.getElementById("feedback").innerText = "✅ " + I18N.result_correct;
         } else {
             document.getElementById("feedback").innerText = "❌ " + fmt(I18N.result_wrong, { answer: correctAnswer });
         }
+        let delay = isCorrect ? FEEDBACK_DELAY_CORRECT : FEEDBACK_DELAY_WRONG;
+        if (explanation) {
+            const expEl = document.getElementById("explanation");
+            expEl.innerText = "💡 " + explanation;
+            expEl.style.display = "block";
+            delay += isCorrect ? EXPLANATION_EXTRA_DELAY_CORRECT : EXPLANATION_EXTRA_DELAY_WRONG;
+        }
         document.querySelectorAll("#options-container button").forEach(b => b.disabled = true);
         updateLiveScore();
-        setTimeout(nextQuestion, 1200);
+        setTimeout(nextQuestion, delay);
     }
 
     async function handleAnswer(opt) {
@@ -102,7 +136,7 @@
             const q = trivia[current];
             const isCorrect = opt === q.answer;
             if (isCorrect) score++;
-            showFeedback(isCorrect, q.answer);
+            showFeedback(isCorrect, q.answer, q.explanation);
             return;
         }
         try {
@@ -111,9 +145,15 @@
             formData.append("question_index", current);
             formData.append("choice", opt);
             const res = await fetch("/answer-question", { method: "POST", body: formData, credentials: "include" });
+            if (res.status === 401) {
+                alert(I18N.session_expired || "Your session expired. Please log in again.");
+                window.location.href = "/login";
+                return;
+            }
+            if (!res.ok) throw new Error("Request failed");
             const data = await res.json();
             score = data.score;
-            showFeedback(data.correct, data.answer);
+            showFeedback(data.correct, data.answer, data.explanation);
         } catch (err) {
             document.querySelectorAll("#options-container button").forEach(b => b.disabled = false);
             alert(I18N.error_request_failed || "Request failed.");
@@ -124,25 +164,71 @@
         document.getElementById("live-score").innerText = fmt(I18N.result_score, { score: score });
     }
 
-    async function nextQuestion() {
+    function nextQuestion() {
         current++;
-        if (current < trivia.length) {
-            showQuestion();
-        } else {
-            const guestNote = guestMode
-                ? `<p style="color: #ffeb3b; margin-top: 0.5rem;">${I18N.result_guest_not_saved}</p>`
-                : "";
-            const playAgainUrl = guestMode ? "/upload/guest" : "/upload";
-            document.getElementById("game").innerHTML = `
+        advance();
+    }
+
+    function advance() {
+        if (current >= total || (done && current >= trivia.length)) {
+            endGame();
+            return;
+        }
+        if (current >= trivia.length) {
+            waiting = true;
+            showWaiting();
+            return;
+        }
+        waiting = false;
+        showQuestion();
+    }
+
+    function showWaiting() {
+        document.getElementById("feedback").innerText = "";
+        const expEl = document.getElementById("explanation");
+        expEl.innerText = "";
+        expEl.style.display = "none";
+        document.getElementById("question-text").innerText = I18N.result_loading_more || "Loading more questions...";
+        document.getElementById("options-container").innerHTML = "";
+    }
+
+    function endGame() {
+        if (pollTimer) { clearInterval(pollTimer); pollTimer = null; }
+        const answered = trivia.length;
+        const guestNote = guestMode
+            ? `<p style="color: #ffeb3b; margin-top: 0.5rem;">${I18N.result_guest_not_saved}</p>`
+            : "";
+        const playAgainUrl = guestMode ? "/upload/guest" : "/upload";
+        document.getElementById("game").innerHTML = `
         <h2>🎉 ${I18N.result_game_over}</h2>
-        <p class="score">${fmt(I18N.result_your_score, { score: score, total: trivia.length })}</p>
+        <p class="score">${fmt(I18N.result_your_score, { score: score, total: answered })}</p>
         ${guestNote}
         <div class="game-actions">
           <a href="${playAgainUrl}" class="btn btn-block">🔁 ${I18N.result_try_another}</a>
           <a href="/" class="btn btn-block">🏠 ${I18N.result_back_home}</a>
         </div>
       `;
-        }
+    }
+
+    function startPolling() {
+        if (!jobId || done) return;
+        pollTimer = setInterval(async () => {
+            try {
+                const res = await fetch(`/trivia-status/${jobId}`, { credentials: "include" });
+                const data = await res.json();
+                if (data.questions && data.questions.length > trivia.length) {
+                    trivia = data.questions;
+                }
+                if (data.done) {
+                    done = true;
+                    clearInterval(pollTimer);
+                    pollTimer = null;
+                }
+                if (waiting && (current < trivia.length || done)) {
+                    advance();
+                }
+            } catch (e) {}
+        }, 2000);
     }
 
     document.addEventListener("DOMContentLoaded", () => {
@@ -154,7 +240,8 @@
       `;
             return;
         }
-        showQuestion();
+        startPolling();
+        advance();
     });
 </script>
 {% endblock %}

@@ -18,6 +18,9 @@ from fastapi.responses import FileResponse
 from auth.auth import get_current_user_optional
 
 import os
+import uuid
+import threading
+from db.db import SessionLocal
 from starlette.middleware.sessions import SessionMiddleware
 from authlib.integrations.starlette_client import OAuth
 from dotenv import load_dotenv
@@ -28,12 +31,17 @@ from slowapi.errors import RateLimitExceeded
 
 load_dotenv() # Load environment variables from .env file
 
-MAX_NUM_QUESTIONS = 10
+MAX_NUM_QUESTIONS = 50
 MAX_PDF_BYTES = 10 * 1024 * 1024
+ALLOWED_DIFFICULTIES = {"easy", "medium", "hard", "progressive"}
 
 
 def clamp_num_questions(value: int) -> int:
     return max(1, min(value, MAX_NUM_QUESTIONS))
+
+
+def clean_difficulty(value: str) -> str:
+    return value if value in ALLOWED_DIFFICULTIES else "medium"
 
 
 def public_trivia(trivia):
@@ -41,6 +49,68 @@ def public_trivia(trivia):
         {"question": q.get("question"), "options": q.get("options", [])}
         for q in (trivia or [])
     ]
+
+
+TRIVIA_JOBS = {}
+JOBS_LOCK = threading.Lock()
+FIRST_BATCH = 3
+
+
+def _bg_generate(job_id, file_bytes, remaining, lang, difficulty, exclude, game_id):
+    try:
+        more = generate_trivia_from_pdf(
+            file_bytes, num_questions=remaining, lang=lang,
+            difficulty=difficulty, exclude_questions=exclude,
+        )
+    except Exception:
+        more = []
+    with JOBS_LOCK:
+        job = TRIVIA_JOBS.get(job_id)
+        existing = list(job["questions"]) if job else []
+    full = existing + more
+    if game_id is not None and more:
+        db = SessionLocal()
+        try:
+            game = db.query(ImageTrivia).filter(ImageTrivia.id == game_id).first()
+            if game:
+                game.trivia = full
+                db.commit()
+        finally:
+            db.close()
+    with JOBS_LOCK:
+        job = TRIVIA_JOBS.get(job_id)
+        if job:
+            job["questions"] = full
+            job["done"] = True
+
+
+def _run_generation(file_bytes, key, num_questions, lang, difficulty, user_id, db):
+    stream = difficulty != "progressive" and num_questions > FIRST_BATCH
+    first_n = FIRST_BATCH if stream else num_questions
+    first_trivia = generate_trivia_from_pdf(file_bytes, num_questions=first_n, lang=lang, difficulty=difficulty)
+    if not first_trivia:
+        return [], None, None, 0
+    game_id = None
+    if user_id is not None:
+        game = create_game(user_id=user_id, file_key=key, trivia=first_trivia, db=db)
+        game_id = game.id
+    if not stream:
+        return first_trivia, game_id, None, len(first_trivia)
+    job_id = str(uuid.uuid4())
+    with JOBS_LOCK:
+        TRIVIA_JOBS[job_id] = {
+            "questions": list(first_trivia),
+            "total": num_questions,
+            "done": False,
+            "game_id": game_id,
+        }
+    threading.Thread(
+        target=_bg_generate,
+        args=(job_id, file_bytes, num_questions - len(first_trivia), lang, difficulty,
+              [q["question"] for q in first_trivia], game_id),
+        daemon=True,
+    ).start()
+    return first_trivia, game_id, job_id, num_questions
 
 
 async def read_pdf_within_limit(request: Request, file: UploadFile) -> bytes:
@@ -219,19 +289,21 @@ async def upload_pdf(
     request: Request,
     file: UploadFile = File(...),
     num_questions: int = Form(3),
+    difficulty: str = Form("medium"),
     current_user: User = Depends(get_current_user)
 ):
     file_bytes = await read_pdf_within_limit(request, file)
     key, _ = upload_and_get_presigned_url(file_bytes, file.filename, file.content_type)
     lang = get_lang(request)
-    trivia = generate_trivia_from_pdf(file_bytes, num_questions=clamp_num_questions(num_questions), lang=lang)
-    game_id = None
-    if trivia:
-        game = create_game(user_id=current_user.id, file_key=key, trivia=trivia)
-        game_id = game.id
+    first_trivia, game_id, job_id, total = _run_generation(
+        file_bytes, key, clamp_num_questions(num_questions), lang,
+        clean_difficulty(difficulty), user_id=current_user.id, db=None,
+    )
     return render_template(request, "result.html", {
-        "trivia": public_trivia(trivia),
+        "trivia": public_trivia(first_trivia),
         "game_id": game_id,
+        "job_id": job_id,
+        "total": total,
         "username": current_user.username,
         "guest_mode": False
     })
@@ -243,13 +315,19 @@ async def upload_pdf_guest(
     request: Request,
     file: UploadFile = File(...),
     num_questions: int = Form(3),
+    difficulty: str = Form("medium"),
 ):
     file_bytes = await read_pdf_within_limit(request, file)
     lang = get_lang(request)
-    trivia = generate_trivia_from_pdf(file_bytes, num_questions=clamp_num_questions(num_questions), lang=lang)
+    first_trivia, game_id, job_id, total = _run_generation(
+        file_bytes, None, clamp_num_questions(num_questions), lang,
+        clean_difficulty(difficulty), user_id=None, db=None,
+    )
     return render_template(request, "result.html", {
-        "trivia": trivia,
+        "trivia": first_trivia,
         "game_id": None,
+        "job_id": job_id,
+        "total": total,
         "username": None,
         "guest_mode": True
     })
@@ -262,19 +340,21 @@ async def play_default_pdf(
     request: Request,
     pdf_id: str = Form("alice_in_wonderland"),
     num_questions: int = Form(3),
+    difficulty: str = Form("medium"),
     current_user: User = Depends(get_current_user),
     db: Session = Depends(get_db),
 ):
     file_bytes, key = get_default_pdf_bytes(pdf_id)
     lang = get_lang(request)
-    trivia = generate_trivia_from_pdf(file_bytes, num_questions=clamp_num_questions(num_questions), lang=lang)
-    game_id = None
-    if trivia:
-        game = create_game(user_id=current_user.id, file_key=key, trivia=trivia, db=db)
-        game_id = game.id
+    first_trivia, game_id, job_id, total = _run_generation(
+        file_bytes, key, clamp_num_questions(num_questions), lang,
+        clean_difficulty(difficulty), user_id=current_user.id, db=db,
+    )
     return render_template(request, "result.html", {
-        "trivia": public_trivia(trivia),
+        "trivia": public_trivia(first_trivia),
         "game_id": game_id,
+        "job_id": job_id,
+        "total": total,
         "username": current_user.username,
         "guest_mode": False
     })
@@ -286,13 +366,19 @@ async def play_default_pdf_guest(
     request: Request,
     pdf_id: str = Form("alice_in_wonderland"),
     num_questions: int = Form(3),
+    difficulty: str = Form("medium"),
 ):
     file_bytes, _ = get_default_pdf_bytes(pdf_id)
     lang = get_lang(request)
-    trivia = generate_trivia_from_pdf(file_bytes, num_questions=clamp_num_questions(num_questions), lang=lang)
+    first_trivia, game_id, job_id, total = _run_generation(
+        file_bytes, None, clamp_num_questions(num_questions), lang,
+        clean_difficulty(difficulty), user_id=None, db=None,
+    )
     return render_template(request, "result.html", {
-        "trivia": trivia,
+        "trivia": first_trivia,
         "game_id": None,
+        "job_id": job_id,
+        "total": total,
         "username": None,
         "guest_mode": True
     })
@@ -338,10 +424,25 @@ async def answer_question(
     return {
         "correct": is_correct,
         "answer": correct_answer,
+        "explanation": trivia[question_index].get("explanation", ""),
         "score": state["score"],
         "total": len(trivia),
         "finished": finished,
     }
+
+
+@app.get("/trivia-status/{job_id}", tags=["scores"], summary="Poll for background-generated trivia questions")
+async def trivia_status(job_id: str):
+    with JOBS_LOCK:
+        job = TRIVIA_JOBS.get(job_id)
+        if not job:
+            return {"questions": [], "total": 0, "done": True}
+        include_answers = job["game_id"] is None
+        questions = job["questions"] if include_answers else public_trivia(job["questions"])
+        result = {"questions": questions, "total": job["total"], "done": job["done"]}
+        if job["done"]:
+            TRIVIA_JOBS.pop(job_id, None)
+        return result
 
 @app.get("/scores", response_class=HTMLResponse, tags=["scores"], summary="View score board")
 def show_scores(request: Request, db: Session = Depends(get_db), current_user: User = Depends(get_current_user)):
