@@ -4,9 +4,9 @@
 
 {% block content %}
 <div id="page-wrap">
-    <h1>{{ t('result.heading') }} 🎯</h1>
+    <h1 id="result-heading">{{ t('result.heading') }} 🎯</h1>
     {% if guest_mode %}
-    <p style="color: #ffeb3b; margin-bottom: 1rem;">🎮 {{ t('result.guest_mode') }}</p>
+    <p id="guest-mode-note" style="color: #ffeb3b; margin-bottom: 1rem;">🎮 {{ t('result.guest_mode') }}</p>
     {% endif %}
     <div class="upload-option-card" style="max-width: 640px; margin-top: 1rem;">
         <div id="game">
@@ -74,7 +74,8 @@
 </style>
 
 <script>
-    const I18N = {{ i18n_js | tojson }};
+    window.__preserveLangSwitch = true;
+    let I18N = {{ i18n_js | tojson }};
     let trivia = {{ trivia | tojson | safe }};
     const gameId = {{ game_id | tojson }};
     const guestMode = {{ guest_mode | tojson }};
@@ -85,10 +86,41 @@
     let done = trivia.length >= total;
     let waiting = false;
     let pollTimer = null;
+    let gameEnded = false;
+    let noQuestions = false;
 
     function fmt(template, vars) {
         return template.replace(/\{(\w+)\}/g, (_, key) => vars[key] ?? "");
     }
+
+    window.applyLanguage = function(data) {
+        I18N = data.i18n_js;
+        if (data.ui["result.title"]) {
+            document.title = data.ui["result.title"];
+        }
+        const heading = document.getElementById("result-heading");
+        if (heading && data.ui["result.heading"]) {
+            heading.textContent = data.ui["result.heading"] + " 🎯";
+        }
+        const guestNote = document.getElementById("guest-mode-note");
+        if (guestNote && data.ui["result.guest_mode"]) {
+            guestNote.textContent = "🎮 " + data.ui["result.guest_mode"];
+        }
+        if (noQuestions) {
+            renderNoQuestions();
+            return;
+        }
+        if (gameEnded) {
+            endGame();
+            return;
+        }
+        if (document.getElementById("live-score")) {
+            updateLiveScore();
+        }
+        if (waiting) {
+            showWaiting();
+        }
+    };
 
     function showQuestion() {
         document.getElementById("feedback").innerText = "";
@@ -194,6 +226,7 @@
 
     function endGame() {
         if (pollTimer) { clearInterval(pollTimer); pollTimer = null; }
+        gameEnded = true;
         const answered = trivia.length;
         const guestNote = guestMode
             ? `<p style="color: #ffeb3b; margin-top: 0.5rem;">${I18N.result_guest_not_saved}</p>`
@@ -207,6 +240,15 @@
           <a href="${playAgainUrl}" class="btn btn-block">🔁 ${I18N.result_try_another}</a>
           <a href="/" class="btn btn-block">🏠 ${I18N.result_back_home}</a>
         </div>
+      `;
+    }
+
+    function renderNoQuestions() {
+        noQuestions = true;
+        const backUrl = guestMode ? "/upload/guest" : "/upload";
+        document.getElementById("game").innerHTML = `
+        <p>${I18N.result_no_questions}</p>
+        <a href="${backUrl}" class="btn">${I18N.result_back}</a>
       `;
     }
 
@@ -233,11 +275,7 @@
 
     document.addEventListener("DOMContentLoaded", () => {
         if (!Array.isArray(trivia) || trivia.length === 0) {
-            const backUrl = guestMode ? "/upload/guest" : "/upload";
-            document.getElementById("game").innerHTML = `
-        <p>${I18N.result_no_questions}</p>
-        <a href="${backUrl}" class="btn">${I18N.result_back}</a>
-      `;
+            renderNoQuestions();
             return;
         }
         startPolling();

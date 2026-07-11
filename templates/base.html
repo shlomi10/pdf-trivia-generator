@@ -10,8 +10,8 @@
 <body>
 
 <div class="lang-switcher">
-    <a href="/set-language/en" class="lang-btn{% if lang == 'en' %} active{% endif %}">EN</a>
-    <a href="/set-language/he" class="lang-btn{% if lang == 'he' %} active{% endif %}">HE</a>
+    <a href="/set-language/en" data-lang="en" class="lang-btn{% if lang == 'en' %} active{% endif %}">EN</a>
+    <a href="/set-language/he" data-lang="he" class="lang-btn{% if lang == 'he' %} active{% endif %}">HE</a>
 </div>
 
 <div class="rolex-clock">
@@ -21,19 +21,19 @@
 </div>
 
 {% if username %}
-<h2 class="fade-in">{{ t('welcome.user', name=username) }} 👋</h2>
+<h2 class="fade-in" data-i18n-welcome data-username="{{ username }}">{{ t('welcome.user', name=username) }} 👋</h2>
 {% endif %}
 
 <nav>
-    <a href="/">🏠 {{ t('nav.home') }}</a>
-    <a href="/about">ℹ️ {{ t('nav.about') }}</a>
+    <a href="/">🏠 <span data-i18n="nav.home">{{ t('nav.home') }}</span></a>
+    <a href="/about">ℹ️ <span data-i18n="nav.about">{{ t('nav.about') }}</span></a>
     {% if username %}
-    <a href="/upload">📤 {{ t('nav.upload') }}</a>
-    <a href="/scores">📊 {{ t('nav.scores') }}</a>
-    <a href="/logout">🚪 {{ t('nav.logout') }}</a>
+    <a href="/upload">📤 <span data-i18n="nav.upload">{{ t('nav.upload') }}</span></a>
+    <a href="/scores">📊 <span data-i18n="nav.scores">{{ t('nav.scores') }}</span></a>
+    <a href="/logout">🚪 <span data-i18n="nav.logout">{{ t('nav.logout') }}</span></a>
     {% else %}
-    <a href="/login">🔐 {{ t('nav.login') }}</a>
-    <a href="/register">📝 {{ t('nav.register') }}</a>
+    <a href="/login">🔐 <span data-i18n="nav.login">{{ t('nav.login') }}</span></a>
+    <a href="/register">📝 <span data-i18n="nav.register">{{ t('nav.register') }}</span></a>
     {% endif %}
 </nav>
 
@@ -44,5 +44,6 @@
     alert("👋 {{ t('logout.alert') }}");
 </script>
 {% endif %}
+<script src="/static/lang_switch.js?v=1"></script>
 </body>
 </html>

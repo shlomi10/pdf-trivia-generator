@@ -258,3 +258,21 @@ def js_strings(lang: str) -> dict:
         "result_loading_more": translate("result.loading_more", lang),
         "session_expired": translate("error.session_expired", lang),
     }
+
+
+def ui_strings(lang: str) -> dict:
+    keys = (
+        "app.name",
+        "nav.home",
+        "nav.upload",
+        "nav.scores",
+        "nav.logout",
+        "nav.login",
+        "nav.register",
+        "nav.about",
+        "welcome.user",
+        "result.title",
+        "result.heading",
+        "result.guest_mode",
+    )
+    return {key: translate(key, lang) for key in keys}

@@ -7,7 +7,7 @@ from db.models import User, ImageTrivia
 from services.aws_file_utils import upload_and_get_presigned_url
 from services.default_pdfs import get_default_pdf_bytes
 from services.trivia_generator import generate_trivia_from_pdf
-from services.i18n import get_lang, translate, js_strings
+from services.i18n import get_lang, translate, js_strings, ui_strings
 from games.games import create_game, get_db
 from fastapi import FastAPI, Form, Depends, HTTPException
 from fastapi.responses import RedirectResponse
@@ -513,6 +513,19 @@ def show_scores(request: Request, page: int = 1, db: Session = Depends(get_db), 
 async def set_language(request: Request, lang_code: str):
     if lang_code in ("en", "he"):
         request.session["lang"] = lang_code
+    lang = get_lang(request)
+    wants_json = (
+        request.query_params.get("format") == "json"
+        or "application/json" in (request.headers.get("accept") or "")
+    )
+    if wants_json:
+        from fastapi.responses import JSONResponse
+        return JSONResponse({
+            "lang": lang,
+            "dir": "rtl" if lang == "he" else "ltr",
+            "ui": ui_strings(lang),
+            "i18n_js": js_strings(lang),
+        })
     referer = request.headers.get("referer") or "/"
     return RedirectResponse(url=referer, status_code=302)
 
