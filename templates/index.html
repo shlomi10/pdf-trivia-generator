@@ -3,20 +3,13 @@
 {% block title %}{{ t('home.title') }}{% endblock %}
 
 {% block content %}
-<div class="page-center">
-  <div class="content-card">
-    <h1 class="text-outline glow" style="font-size: 2.75rem; margin-bottom: 1rem;">
-      {{ t('home.heading') }} <br/>
-      <span style="color: #4ade80;">{{ t('home.brand') }}</span>
-    </h1>
-
-    <p class="text-outline" style="font-size: 1.25rem; max-width: 650px; margin: 0 auto;">
-      {{ t('home.subtitle') }}
-    </p>
-
-    <p>
-      <button type="button" onclick="window.location.href='/upload'">{{ t('home.start') }} {% if lang == 'he' %}←{% else %}→{% endif %}</button>
-    </p>
+<section class="hero">
+  <h1 class="hero-brand">
+    <span>{{ t('home.brand') }}</span>
+  </h1>
+  <p class="hero-copy">{{ t('home.subtitle') }}</p>
+  <div class="hero-actions">
+    <button type="button" onclick="window.location.href='/upload'">{{ t('home.start') }} {% if lang == 'he' %}←{% else %}→{% endif %}</button>
   </div>
-</div>
+</section>
 {% endblock %}
