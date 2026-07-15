@@ -12,10 +12,10 @@
         <div id="game">
         <div id="quiz">
             <p id="live-score" class="score">{{ t('result.score', score=0) }}</p>
-            <p id="question-text"></p>
+            <p id="question-text" dir="auto"></p>
             <div id="options-container" class="options"></div>
             <p id="feedback"></p>
-            <p id="explanation"></p>
+            <p id="explanation" dir="auto"></p>
         </div>
         </div>
     </div>
@@ -47,6 +47,7 @@
         text-align: center;
         font-size: 1.2rem;
         margin: 0;
+        unicode-bidi: plaintext;
     }
     #options-container {
         display: flex;
@@ -55,6 +56,13 @@
         gap: 0.4rem;
         margin-top: 0.2rem;
         width: 100%;
+    }
+    #options-container button {
+        unicode-bidi: plaintext;
+    }
+    #feedback {
+        max-width: 600px;
+        unicode-bidi: isolate;
     }
     #explanation {
         background-color: #111827;
@@ -69,6 +77,7 @@
         line-height: 1.4;
         margin: 0;
         display: none;
+        unicode-bidi: plaintext;
     }
 
 </style>
@@ -91,6 +100,14 @@
 
     function fmt(template, vars) {
         return template.replace(/\{(\w+)\}/g, (_, key) => vars[key] ?? "");
+    }
+
+    function escapeHtml(text) {
+        return String(text)
+            .replace(/&/g, "&amp;")
+            .replace(/</g, "&lt;")
+            .replace(/>/g, "&gt;")
+            .replace(/"/g, "&quot;");
     }
 
     window.applyLanguage = function(data) {
@@ -133,6 +150,8 @@
         optionsDiv.innerHTML = "";
         q.options.forEach(opt => {
             const btn = document.createElement("button");
+            btn.type = "button";
+            btn.dir = "auto";
             btn.textContent = opt;
             btn.onclick = () => handleAnswer(opt);
             optionsDiv.appendChild(btn);
@@ -145,15 +164,18 @@
     const EXPLANATION_EXTRA_DELAY_WRONG = 1200;
 
     function showFeedback(isCorrect, correctAnswer, explanation) {
+        const feedbackEl = document.getElementById("feedback");
         if (isCorrect) {
-            document.getElementById("feedback").innerText = "✅ " + I18N.result_correct;
+            feedbackEl.textContent = "✅ " + I18N.result_correct;
         } else {
-            document.getElementById("feedback").innerText = "❌ " + fmt(I18N.result_wrong, { answer: correctAnswer });
+            feedbackEl.innerHTML = "❌ " + fmt(I18N.result_wrong, {
+                answer: "<bdi>" + escapeHtml(correctAnswer) + "</bdi>",
+            });
         }
         let delay = isCorrect ? FEEDBACK_DELAY_CORRECT : FEEDBACK_DELAY_WRONG;
         if (explanation) {
             const expEl = document.getElementById("explanation");
-            expEl.innerText = "💡 " + explanation;
+            expEl.textContent = "💡 " + explanation;
             expEl.style.display = "block";
             delay += isCorrect ? EXPLANATION_EXTRA_DELAY_CORRECT : EXPLANATION_EXTRA_DELAY_WRONG;
         }
