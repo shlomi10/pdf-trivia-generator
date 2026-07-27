@@ -178,10 +178,11 @@ def render_template(request: Request, name: str, context: dict = None, status_co
 
 CONTENT_SECURITY_POLICY = (
     "default-src 'self'; "
-    "script-src 'self' 'unsafe-inline'; "
-    "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; "
-    "font-src 'self' https://fonts.gstatic.com; "
-    "img-src 'self' data: https://www.gstatic.com https://static.rolex.com; "
+    "script-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net; "
+    "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com https://cdn.jsdelivr.net; "
+    "font-src 'self' https://fonts.gstatic.com https://cdn.jsdelivr.net; "
+    "img-src 'self' data: https://www.gstatic.com https://static.rolex.com https://cdn.jsdelivr.net https://fastapi.tiangolo.com; "
+    "worker-src 'self' blob:; "
     "frame-src https://static.rolex.com; "
     "connect-src 'self'; "
     "frame-ancestors 'self'; "
