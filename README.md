@@ -11,7 +11,7 @@
 
 <p align="center">
 
-[![Python](https://img.shields.io/badge/Python-3.14+-3776AB?style=for-the-badge&logo=python&logoColor=white)](https://www.python.org/)
+[![Python](https://img.shields.io/badge/Python-3.15+-3776AB?style=for-the-badge&logo=python&logoColor=white)](https://www.python.org/)
 [![FastAPI](https://img.shields.io/badge/FastAPI-009688?style=for-the-badge&logo=fastapi&logoColor=white)](https://fastapi.tiangolo.com/)
 [![OpenAI](https://img.shields.io/badge/GPT--5-412991?style=for-the-badge&logo=openai&logoColor=white)](https://openai.com/)
 [![PostgreSQL](https://img.shields.io/badge/PostgreSQL-4169E1?style=for-the-badge&logo=postgresql&logoColor=white)](https://www.postgresql.org/)
@@ -106,7 +106,7 @@ The IAM user needs `s3:GetObject` and `s3:PutObject` on `arn:aws:s3:::files.hand
 
 | Layer | Technology |
 |-------|------------|
-| Backend | FastAPI, Python 3.14+, SQLAlchemy |
+| Backend | FastAPI, Python 3.15+, SQLAlchemy |
 | AI | OpenAI GPT-5 |
 | PDF | PyMuPDF |
 | Storage | AWS S3 (Boto3) |
